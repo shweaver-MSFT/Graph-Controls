@@ -40,11 +40,11 @@
   </ItemGroup>
  
   <ItemGroup>
-      <Page Update="Controls\PersonView\PersonView.xaml">
-          <Generator>MSBuild:Compile</Generator>
-      </Page>
+    <Page Update="Controls\PersonView\PersonView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Controls\TaskList\TaskList.xaml">
-        <Generator>MSBuild:Compile</Generator>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Controls\TaskItem\TaskItem.xaml">
       <Generator>MSBuild:Compile</Generator>

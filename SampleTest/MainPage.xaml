@@ -43,8 +43,11 @@
         </PivotItem>
         <PivotItem Header="Todo Tasks">
             <StackPanel>
-                <TextBlock Text="Todo Item" />
-                <wgt:TaskItem></wgt:TaskItem>
+                <!-- <wgt:TaskItem></wgt:TaskItem>-->
+                <wgt:TaskList
+                    Margin="100"
+                    BorderBrush="Black"
+                    BorderThickness="2"></wgt:TaskList>
             </StackPanel>
         </PivotItem>
         <PivotItem Header="PeoplePicker">

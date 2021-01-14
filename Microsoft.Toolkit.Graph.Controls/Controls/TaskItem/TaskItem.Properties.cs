@@ -1,5 +1,6 @@
 ﻿using Microsoft.Graph;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
@@ -18,7 +19,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// TodoTask item metadata.
+        /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty TaskDetailsProperty =
             DependencyProperty.Register(nameof(TaskDetails), typeof(TodoTask), typeof(TaskItem), new PropertyMetadata(null));

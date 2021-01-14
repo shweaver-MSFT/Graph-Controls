@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Graph;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
@@ -11,5 +7,34 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// </summary>
     public partial class TaskList : BaseGraphControl
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TaskList"/> class.
+        /// </summary>
+        public TaskList()
+        {
+            this.DefaultStyleKey = typeof(TaskList);
+        }
+
+        /// <inheritdoc/>
+        protected override void LoadData()
+        {
+            CompletedTasks.Add(new TodoTask()
+            {
+                Title = "Walk the dog",
+                Status = TaskStatus.Completed,
+            });
+            AvailableTasks.Add(new TodoTask()
+            {
+                Title = "Do the dishes",
+                Status = TaskStatus.InProgress,
+            });
+        }
+
+        /// <inheritdoc/>
+        protected override void ClearData()
+        {
+            CompletedTasks.Clear();
+            AvailableTasks.Clear();
+        }
     }
 }

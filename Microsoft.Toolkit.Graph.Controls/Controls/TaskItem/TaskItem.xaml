@@ -3,13 +3,45 @@
                     xmlns:local="using:Microsoft.Toolkit.Graph.Controls"
                     xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters">
 
-    <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter"/>
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="TaskItemBackground" Color="Transparent" />
+            <BackgroundSizing x:Key="TaskItemBackgroundSizing">InnerBorderEdge</BackgroundSizing>
+            <SolidColorBrush x:Key="TaskItemBorderBrush" Color="Transparent" />
+            <Thickness x:Key="TaskItemBorderThickness">0</Thickness>
+            <CornerRadius x:Key="TaskItemCornerRadius">0</CornerRadius>
+            <FontFamily x:Key="TaskItemFontFamily">XamlAutoFontFamily</FontFamily>
+            <SolidColorBrush x:Key="TaskItemForeground" Color="Black" />
+            <Thickness x:Key="TaskItemMargin">0</Thickness>
+            <Thickness x:Key="TaskItemPadding">0</Thickness>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter" />
+    <converters:TaskStatusToTextDecorationsConverter x:Key="TaskStatusToTextDecorationsConverter" />
 
     <Style TargetType="local:TaskItem">
+        <Setter Property="Background" Value="{ThemeResource TaskItemBackground}" />
+        <Setter Property="BackgroundSizing" Value="{ThemeResource TaskItemBackgroundSizing}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource TaskItemBorderBrush}" />
+        <Setter Property="BorderThickness" Value="{ThemeResource TaskItemBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{ThemeResource TaskItemCornerRadius}" />
+        <Setter Property="FontFamily" Value="{ThemeResource TaskItemFontFamily}" />
+        <Setter Property="Foreground" Value="{ThemeResource TaskItemForeground}" />
+        <Setter Property="Margin" Value="{ThemeResource TaskItemMargin}" />
+        <Setter Property="Padding" Value="{ThemeResource TaskItemPadding}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TaskItem">
-                    <Grid>
+                    <Grid 
+                        Background="{TemplateBinding Background}"
+                        BackgroundSizing="{TemplateBinding BackgroundSizing}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Margin="{TemplateBinding Margin}"
+                        Padding="{TemplateBinding Padding}">
+
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition />
@@ -20,15 +52,21 @@
                         </Grid.RowDefinitions>
 
                         <CheckBox 
+                            Foreground="{TemplateBinding Foreground}"
                             Grid.RowSpan="2"
                             MinWidth="0"
                             IsChecked="{Binding TaskDetails.Status, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TaskStatusToBoolConverter}}"/>
 
                         <TextBlock 
+                            FontFamily="{TemplateBinding FontFamily}"
+                            Foreground="{TemplateBinding Foreground}"
                             Grid.Column="1"
-                            Text="{Binding TaskDetails.Title, RelativeSource={RelativeSource TemplatedParent}}" />
+                            Text="{Binding TaskDetails.Title, RelativeSource={RelativeSource TemplatedParent}}"
+                            TextDecorations="{Binding TaskDetails.Status, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TaskStatusToTextDecorationsConverter}}"/>
 
                         <TextBlock
+                            FontFamily="{TemplateBinding FontFamily}"
+                            Foreground="{TemplateBinding Foreground}"
                             Grid.Column="1"
                             Grid.Row="1"
                             Text="25 min" />

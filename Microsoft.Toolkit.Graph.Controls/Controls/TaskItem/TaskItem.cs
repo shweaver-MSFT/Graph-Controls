@@ -18,11 +18,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc/>
         protected override void LoadData()
         {
-            TaskDetails = new TodoTask()
-            {
-                Title = "Walk the dog",
-                Status = TaskStatus.Completed,
-            };
         }
 
         /// <inheritdoc/>

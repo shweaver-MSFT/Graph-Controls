@@ -3,23 +3,106 @@
                     xmlns:local="using:Microsoft.Toolkit.Graph.Controls"
                     xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters">
 
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="TaskListBackground" Color="Transparent" />
+            <BackgroundSizing x:Key="TaskListBackgroundSizing">InnerBorderEdge</BackgroundSizing>
+            <SolidColorBrush x:Key="TaskListBorderBrush" Color="Transparent" />
+            <Thickness x:Key="TaskListBorderThickness">0</Thickness>
+            <CornerRadius x:Key="TaskListCornerRadius">0</CornerRadius>
+            <FontFamily x:Key="TaskListFontFamily">XamlAutoFontFamily</FontFamily>
+            <SolidColorBrush x:Key="TaskListForeground" Color="Black" />
+            <Thickness x:Key="TaskListMargin">0</Thickness>
+            <Thickness x:Key="TaskListPadding">0</Thickness>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
     <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter"/>
 
+    <DataTemplate x:Key="TaskItemTemplate">
+        <local:TaskItem TaskDetails="{Binding}" />
+    </DataTemplate>
+
     <Style TargetType="local:TaskList">
+        <Setter Property="Background" Value="{ThemeResource TaskListBackground}" />
+        <Setter Property="BackgroundSizing" Value="{ThemeResource TaskListBackgroundSizing}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource TaskListBorderBrush}" />
+        <Setter Property="BorderThickness" Value="{ThemeResource TaskListBorderThickness}" />
+        <Setter Property="CornerRadius" Value="{ThemeResource TaskListCornerRadius}" />
+        <Setter Property="FontFamily" Value="{ThemeResource TaskListFontFamily}" />
+        <Setter Property="Foreground" Value="{ThemeResource TaskListForeground}" />
+        <Setter Property="Margin" Value="{ThemeResource TaskListMargin}" />
+        <Setter Property="Padding" Value="{ThemeResource TaskListPadding}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TaskList">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
+                    <StackPanel
+                        Background="{TemplateBinding Background}"
+                        BackgroundSizing="{TemplateBinding BackgroundSizing}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Margin="{TemplateBinding Margin}"
+                        Padding="{TemplateBinding Padding}">
+                        <!-- Header panel -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-                    </Grid>
+                            <!-- Left side -->
+                            <SymbolIcon 
+                                Margin="8"
+                                Symbol="Accept" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Text="My Day" 
+                                x:Uid="TaskList_MyDay" />
+                            <ComboBox 
+                                Grid.Column="2"
+                                Margin="8, 0" />
+                            
+                            <!-- Right side -->
+                            <!-- Add task button -->
+                            <Button Grid.Column="4">
+                                <SymbolIcon Symbol="Add" />
+                            </Button>
+                            <!-- More options button -->
+                            <Button Grid.Column="5">
+                                <SymbolIcon Symbol="More" />
+                            </Button>
+                        </Grid>
+
+                        <!-- Available tasks -->
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{TemplateBinding FontFamily}"
+                                Foreground="{TemplateBinding Foreground}"
+                                Text="Select a task for your session"
+                                x:Uid="TaskList_AvailableTasksTitle"/>
+                            <ListView
+                                ItemsSource="{Binding AvailableTasks, RelativeSource={RelativeSource TemplatedParent}}"
+                                ItemTemplate="{StaticResource TaskItemTemplate}" />
+                        </StackPanel>
+
+                        <!-- Completed tasks -->
+                        <StackPanel>
+                            <TextBlock
+                                FontFamily="{TemplateBinding FontFamily}"
+                                Foreground="{TemplateBinding Foreground}"
+                                Text="Completed tasks"
+                                x:Uid="TaskList_CompletedTasksTitle"/>
+                            <ListView
+                                ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
+                                ItemTemplate="{StaticResource TaskItemTemplate}" />
+                        </StackPanel>
+                    </StackPanel>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
