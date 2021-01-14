@@ -4,5 +4,6 @@
         <ResourceDictionary Source="ms-appx:///Microsoft.Toolkit.Graph.Controls/Controls/LoginButton/LoginButton.xaml" />
         <ResourceDictionary Source="ms-appx:///Microsoft.Toolkit.Graph.Controls/Controls/PeoplePicker/PeoplePicker.xaml" />
         <ResourceDictionary Source="ms-appx:///Microsoft.Toolkit.Graph.Controls/Controls/PersonView/PersonView.xaml" />
+        <ResourceDictionary Source="ms-appx:///Microsoft.Toolkit.Graph.Controls/Controls/TodoItem/TodoItem.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

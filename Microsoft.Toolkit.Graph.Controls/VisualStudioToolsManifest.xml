@@ -4,6 +4,7 @@
       <Item Type="Microsoft.Toolkit.Graph.Controls.LoginButton" />
       <Item Type="Microsoft.Toolkit.Graph.Controls.PeoplePicker" />
       <Item Type="Microsoft.Toolkit.Graph.Controls.PersonView" />
+      <Item Type="Microsoft.Toolkit.Graph.Controls.TodoItem" />
     </ToolboxItems>
   </File>
 </FileList>
