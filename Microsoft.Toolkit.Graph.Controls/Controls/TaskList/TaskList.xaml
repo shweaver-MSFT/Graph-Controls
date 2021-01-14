@@ -5,10 +5,10 @@
 
     <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter"/>
 
-    <Style TargetType="local:TodoItem">
+    <Style TargetType="local:TaskList">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="local:TodoItem">
+                <ControlTemplate TargetType="local:TaskList">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -19,19 +19,6 @@
                             <RowDefinition />
                         </Grid.RowDefinitions>
 
-                        <CheckBox 
-                            Grid.RowSpan="2"
-                            MinWidth="0"
-                            IsChecked="{Binding TaskDetails.Status, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TaskStatusToBoolConverter}}"/>
-
-                        <TextBlock 
-                            Grid.Column="1"
-                            Text="{Binding TaskDetails.Title, RelativeSource={RelativeSource TemplatedParent}}" />
-
-                        <TextBlock
-                            Grid.Column="1"
-                            Grid.Row="1"
-                            Text="25 min" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

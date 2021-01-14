@@ -19,7 +19,7 @@
     <Configurations>Debug;Release;CI</Configurations>
     <Platforms>AnyCPU;ARM;ARM64;x64;x86</Platforms>
   </PropertyGroup>
-
+    
   <ItemGroup>
     <Content Include="Assets\person.png" />
   </ItemGroup> 
@@ -40,13 +40,13 @@
   </ItemGroup>
  
   <ItemGroup>
-    <Page Update="Controls\PersonView\PersonView.xaml">
-      <Generator>MSBuild:Compile</Generator>
+      <Page Update="Controls\PersonView\PersonView.xaml">
+          <Generator>MSBuild:Compile</Generator>
+      </Page>
+    <Page Update="Controls\TaskList\TaskList.xaml">
+        <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
- 
-  <ItemGroup>
-    <Page Update="Controls\TodoItem\TodoItem.xaml">
+    <Page Update="Controls\TaskItem\TaskItem.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

@@ -5,14 +5,14 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// <summary>
     /// A visualization of a single Todo task item.
     /// </summary>
-    public partial class TodoItem : BaseGraphControl
+    public partial class TaskItem : BaseGraphControl
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="TodoItem"/> class.
+        /// Initializes a new instance of the <see cref="TaskItem"/> class.
         /// </summary>
-        public TodoItem()
+        public TaskItem()
         {
-            this.DefaultStyleKey = typeof(TodoItem);
+            this.DefaultStyleKey = typeof(TaskItem);
         }
 
         /// <inheritdoc/>

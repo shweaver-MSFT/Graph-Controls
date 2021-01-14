@@ -6,7 +6,7 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// <summary>
     /// foo
     /// </summary>
-    public partial class TodoItem
+    public partial class TaskItem
     {
         /// <summary>
         /// Gets or sets the TaskDetails property value.
@@ -21,6 +21,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// TodoTask item metadata.
         /// </summary>
         public static readonly DependencyProperty TaskDetailsProperty =
-            DependencyProperty.Register(nameof(TaskDetails), typeof(TodoTask), typeof(TodoItem), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(TaskDetails), typeof(TodoTask), typeof(TaskItem), new PropertyMetadata(null));
     }
 }
