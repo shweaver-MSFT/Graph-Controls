@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Microsoft.Graph;
 using Windows.UI.Xaml;
 
@@ -10,11 +12,76 @@ namespace Microsoft.Toolkit.Graph.Controls
     public partial class TaskList : BaseGraphControl
     {
         /// <summary>
+        /// Gets or sets the TaskListId property value. Used to set the default TaskList.
+        /// </summary>
+        public string TaskListId
+        {
+            get { return (string)GetValue(TaskListIdProperty); }
+            set { SetValue(TaskListIdProperty, value); }
+        }
+
+        /// <summary>
+        /// Todo task list default id.
+        /// </summary>
+        public static readonly DependencyProperty TaskListIdProperty =
+            DependencyProperty.Register(nameof(TaskListId), typeof(string), typeof(TaskList), new PropertyMetadata(null));
+
+        /// <summary>
+        /// Gets or sets the TaskLists property value.
+        /// </summary>
+        public IList<TodoTaskList> TaskLists
+        {
+            get { return (IList<TodoTaskList>)GetValue(TaskListsProperty); }
+            set { SetValue(TaskListsProperty, value); }
+        }
+
+        /// <summary>
+        /// Todo task lists.
+        /// </summary>
+        public static readonly DependencyProperty TaskListsProperty =
+            DependencyProperty.Register(nameof(TaskLists), typeof(IList<TodoTaskList>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTaskList>()));
+
+        /// <summary>
+        /// Gets or sets the SelectedTaskIndex property value.
+        /// </summary>
+        public int SelectedTaskListIndex
+        {
+            get { return (int)GetValue(SelectedTaskListIndexProperty); }
+            set { SetValue(SelectedTaskListIndexProperty, value); }
+        }
+
+        /// <summary>
+        /// Todo task lists.
+        /// </summary>
+        public static readonly DependencyProperty SelectedTaskListIndexProperty =
+            DependencyProperty.Register(nameof(SelectedTaskListIndex), typeof(int), typeof(TaskList), new PropertyMetadata(0, OnSelectedTaskListIndexChanged));
+
+        /// <summary>
+        /// foo
+        /// </summary>
+        /// <param name="d"></param>
+        /// <param name="e"></param>
+        private static void OnSelectedTaskListIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TaskList taskList)
+            {
+                taskList.SelectedTaskList = (TodoTaskList)e.NewValue;
+                System.Diagnostics.Debug.WriteLine(taskList.SelectedTaskList.Id);
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the SelectedTaskList property value.
+        /// </summary>
+        public TodoTaskList SelectedTaskList { get; protected set; }
+
+        /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public List<TodoTask> AvailableTasks
+        public IList<TodoTask> AvailableTasks
         {
-            get { return (List<TodoTask>)GetValue(AvailableTasksProperty); }
+            get { return (IList<TodoTask>)GetValue(AvailableTasksProperty); }
             set { SetValue(AvailableTasksProperty, value); }
         }
 
@@ -22,14 +89,14 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty AvailableTasksProperty =
-            DependencyProperty.Register(nameof(AvailableTasks), typeof(List<TodoTask>), typeof(TaskList), new PropertyMetadata(new List<TodoTask>()));
+            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
 
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public List<TodoTask> CompletedTasks
+        public IList<TodoTask> CompletedTasks
         {
-            get { return (List<TodoTask>)GetValue(CompletedTasksProperty); }
+            get { return (IList<TodoTask>)GetValue(CompletedTasksProperty); }
             set { SetValue(CompletedTasksProperty, value); }
         }
 
@@ -37,6 +104,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty CompletedTasksProperty =
-            DependencyProperty.Register(nameof(CompletedTasks), typeof(List<TodoTask>), typeof(TaskList), new PropertyMetadata(new List<TodoTask>()));
+            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
     }
 }

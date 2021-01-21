@@ -45,9 +45,9 @@
             <StackPanel>
                 <!-- <wgt:TaskItem></wgt:TaskItem>-->
                 <wgt:TaskList
-                    Margin="100"
+                    Margin="20"
                     BorderBrush="Black"
-                    BorderThickness="2"></wgt:TaskList>
+                    BorderThickness="1"></wgt:TaskList>
             </StackPanel>
         </PivotItem>
         <PivotItem Header="PeoplePicker">

@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="using:Microsoft.Toolkit.Graph.Controls"
-                    xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters">
+                    xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters"
+                    xmlns:graph="using:Microsoft.Graph">
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
@@ -10,10 +11,7 @@
             <SolidColorBrush x:Key="TaskListBorderBrush" Color="Transparent" />
             <Thickness x:Key="TaskListBorderThickness">0</Thickness>
             <CornerRadius x:Key="TaskListCornerRadius">0</CornerRadius>
-            <FontFamily x:Key="TaskListFontFamily">XamlAutoFontFamily</FontFamily>
-            <SolidColorBrush x:Key="TaskListForeground" Color="Black" />
             <Thickness x:Key="TaskListMargin">0</Thickness>
-            <Thickness x:Key="TaskListPadding">0</Thickness>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
@@ -29,10 +27,7 @@
         <Setter Property="BorderBrush" Value="{ThemeResource TaskListBorderBrush}" />
         <Setter Property="BorderThickness" Value="{ThemeResource TaskListBorderThickness}" />
         <Setter Property="CornerRadius" Value="{ThemeResource TaskListCornerRadius}" />
-        <Setter Property="FontFamily" Value="{ThemeResource TaskListFontFamily}" />
-        <Setter Property="Foreground" Value="{ThemeResource TaskListForeground}" />
         <Setter Property="Margin" Value="{ThemeResource TaskListMargin}" />
-        <Setter Property="Padding" Value="{ThemeResource TaskListPadding}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TaskList">
@@ -42,66 +37,66 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
-                        Margin="{TemplateBinding Margin}"
-                        Padding="{TemplateBinding Padding}">
+                        Margin="{TemplateBinding Margin}">
+
                         <!-- Header panel -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition />
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <!-- Left side -->
-                            <SymbolIcon 
-                                Margin="8"
-                                Symbol="Accept" />
-                            <TextBlock
-                                Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Text="My Day" 
-                                x:Uid="TaskList_MyDay" />
-                            <ComboBox 
-                                Grid.Column="2"
-                                Margin="8, 0" />
-                            
+                            <StackPanel Orientation="Horizontal">
+                                <SymbolIcon 
+                                    Symbol="Accept" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="My Day" 
+                                    x:Uid="TaskList_MyDay" />
+                                <ComboBox 
+                                    ItemsSource="{Binding TaskLists, RelativeSource={RelativeSource TemplatedParent}}"
+                                    SelectedIndex="{Binding SelectedTaskListIndex, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock 
+                                                Text="{Binding DisplayName}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
                             <!-- Right side -->
-                            <!-- Add task button -->
-                            <Button Grid.Column="4">
-                                <SymbolIcon Symbol="Add" />
-                            </Button>
-                            <!-- More options button -->
-                            <Button Grid.Column="5">
-                                <SymbolIcon Symbol="More" />
-                            </Button>
+                            <StackPanel 
+                                Grid.Column="2"
+                                Orientation="Horizontal">
+                                <!-- Add task button -->
+                                <Button x:Name="PART_AddButton">
+                                    <SymbolIcon 
+                                        Symbol="Add" />
+                                </Button>
+                                <!-- More options button -->
+                                <Button x:Name="PART_OptionsButton">
+                                    <SymbolIcon 
+                                        Symbol="More" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
 
                         <!-- Available tasks -->
-                        <StackPanel>
-                            <TextBlock
-                                FontFamily="{TemplateBinding FontFamily}"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="Select a task for your session"
-                                x:Uid="TaskList_AvailableTasksTitle"/>
-                            <ListView
-                                ItemsSource="{Binding AvailableTasks, RelativeSource={RelativeSource TemplatedParent}}"
-                                ItemTemplate="{StaticResource TaskItemTemplate}" />
-                        </StackPanel>
+                        <ListView
+                            Header="Select a task for your session"
+                            ItemsSource="{Binding AvailableTasks, RelativeSource={RelativeSource TemplatedParent}}"
+                            ItemTemplate="{StaticResource TaskItemTemplate}"
+                            x:Uid="TaskList_AvailableTasks" />
 
                         <!-- Completed tasks -->
-                        <StackPanel>
-                            <TextBlock
-                                FontFamily="{TemplateBinding FontFamily}"
-                                Foreground="{TemplateBinding Foreground}"
-                                Text="Completed tasks"
-                                x:Uid="TaskList_CompletedTasksTitle"/>
-                            <ListView
-                                ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
-                                ItemTemplate="{StaticResource TaskItemTemplate}" />
-                        </StackPanel>
+                        <ListView
+                            Header="Completed tasks"
+                            ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
+                            ItemTemplate="{StaticResource TaskItemTemplate}"
+                            x:Uid="TaskList_CompletedTasks" />
                     </StackPanel>
                 </ControlTemplate>
             </Setter.Value>

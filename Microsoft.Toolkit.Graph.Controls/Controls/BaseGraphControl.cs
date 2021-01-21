@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Toolkit.Graph.Providers;
+using Windows.Foundation.Diagnostics;
 using Windows.UI.Xaml.Controls;
 
 namespace Microsoft.Toolkit.Graph.Controls
@@ -10,54 +12,55 @@ namespace Microsoft.Toolkit.Graph.Controls
     public abstract class BaseGraphControl : Control
     {
         /// <summary>
+        /// Gets or sets a value indicating whether the control is loading and has not established a sign-in state.
+        /// </summary>
+        public bool IsLoading { get; protected set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BaseGraphControl"/> class.
         /// </summary>
         public BaseGraphControl()
         {
-            ProviderManager.Instance.ProviderUpdated += (sender, args) => Update();
+            IsLoading = false;
+            ProviderManager.Instance.ProviderUpdated += async (s, a) => await UpdateAsync();
         }
 
         /// <inheritdoc/>
-        protected override void OnApplyTemplate()
+        protected override async void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-
-            var provider = ProviderManager.Instance.GlobalProvider;
-            if (provider != null && provider.State == ProviderState.SignedIn)
-            {
-                try
-                {
-                    LoadData();
-                }
-                catch (Exception e)
-                {
-                    System.Diagnostics.Debug.WriteLine(e);
-                    IsEnabled = false;
-                }
-            }
+            await UpdateAsync();
         }
 
         /// <summary>
         /// Update the data state of the control.
         /// </summary>
-        protected void Update()
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        protected async Task UpdateAsync()
         {
+            IsLoading = true;
             try
             {
                 var provider = ProviderManager.Instance.GlobalProvider;
                 if (provider == null)
                 {
-                    ClearData();
+                    await ClearDataAsync();
+                    IsLoading = false;
                     return;
                 }
 
                 switch (provider.State)
                 {
                     case ProviderState.SignedIn:
-                        LoadData();
+                        await LoadDataAsync();
+                        IsLoading = false;
                         break;
                     case ProviderState.SignedOut:
-                        ClearData();
+                        await ClearDataAsync();
+                        IsLoading = false;
+                        break;
+                    case ProviderState.Loading:
+                        IsLoading = true;
                         break;
                 }
             }
@@ -65,21 +68,26 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 System.Diagnostics.Debug.WriteLine(e);
                 IsEnabled = false;
+                IsLoading = false;
             }
         }
 
         /// <summary>
         /// Load data from the Graph and apply the values.
         /// </summary>
-        protected virtual void LoadData()
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        protected virtual Task LoadDataAsync()
         {
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// Clear any data state and reset default values.
         /// </summary>
-        protected virtual void ClearData()
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        protected virtual Task ClearDataAsync()
         {
+            return Task.CompletedTask;
         }
     }
 }

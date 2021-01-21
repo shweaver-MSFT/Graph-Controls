@@ -1,4 +1,4 @@
-﻿using Microsoft.Graph;
+﻿using System.Threading.Tasks;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
@@ -16,14 +16,16 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <inheritdoc/>
-        protected override void LoadData()
+        protected override Task LoadDataAsync()
         {
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        protected override void ClearData()
+        protected override Task ClearDataAsync()
         {
             TaskDetails = null;
+            return Task.CompletedTask;
         }
     }
 }
