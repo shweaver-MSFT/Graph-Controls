@@ -99,9 +99,12 @@
                         <!-- Completed tasks -->
                         <ListView
                             Header="Completed tasks"
+                            IsItemClickEnabled="True"
+                            IsRightTapEnabled="True"
                             ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
                             ItemTemplate="{StaticResource TaskItemTemplate}"
                             SelectionMode="None"
+                            x:Name="PART_CompletedTasksListView"
                             x:Uid="TaskList_CompletedTasks" />
                     </StackPanel>
                 </ControlTemplate>

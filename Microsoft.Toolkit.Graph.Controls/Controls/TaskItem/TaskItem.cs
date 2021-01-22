@@ -25,6 +25,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         protected override Task ClearDataAsync()
         {
             TaskDetails = null;
+            IsEditModeEnabled = false;
             return Task.CompletedTask;
         }
     }

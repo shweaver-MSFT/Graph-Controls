@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Graph;
 using Microsoft.Toolkit.Graph.Providers;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
@@ -17,15 +19,18 @@ namespace Microsoft.Toolkit.Graph.Controls
     [TemplatePart(Name = AddButtonPart, Type = typeof(ButtonBase))]
     [TemplatePart(Name = OptionsButtonPart, Type = typeof(ButtonBase))]
     [TemplatePart(Name = AvailableTasksListViewPart, Type = typeof(ListView))]
+    [TemplatePart(Name = CompletedTasksListViewPart, Type = typeof(ListView))]
     public partial class TaskList : BaseGraphControl
     {
         private const string AddButtonPart = "PART_AddButton";
         private const string OptionsButtonPart = "PART_OptionsButton";
         private const string AvailableTasksListViewPart = "PART_AvailableTasksListView";
+        private const string CompletedTasksListViewPart = "PART_CompletedTasksListView";
 
         private Button _addButton;
         private Button _optionsButton;
         private ListView _availableTasksListView;
+        private ListView _completedTasksListView;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskList"/> class.
@@ -76,6 +81,18 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 _availableTasksListView.ItemClick += AvailableTasksListView_ItemClick;
                 _availableTasksListView.ContextRequested += AvailableTasksListView_ContextRequested;
+            }
+
+            if (_completedTasksListView != null)
+            {
+                _completedTasksListView.ContextRequested -= CompletedTasksListView_ContextRequested;
+            }
+
+            _completedTasksListView = GetTemplateChild(CompletedTasksListViewPart) as ListView;
+
+            if (_completedTasksListView != null)
+            {
+                _completedTasksListView.ContextRequested += CompletedTasksListView_ContextRequested;
             }
         }
 
@@ -162,50 +179,135 @@ namespace Microsoft.Toolkit.Graph.Controls
         private void AvailableTasksListView_ContextRequested(object sender, ContextRequestedEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine("Context requested");
-            var element = e.OriginalSource as FrameworkElement;
-            var task = element.DataContext as TodoTask;
-            ShowTaskItemContextMenu(task, element);
+            var taskItem = GetChildTaskItem(e.OriginalSource);
+            if (taskItem != null)
+            {
+                ShowTaskItemContextMenu(taskItem);
+            }
         }
 
-        private void ShowTaskItemContextMenu(TodoTask task, FrameworkElement targetElement)
+        private void CompletedTasksListView_ContextRequested(object sender, ContextRequestedEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine("Context requested");
+
+            var taskItem = GetChildTaskItem(e.OriginalSource);
+            if (taskItem != null)
+            {
+                ShowTaskItemContextMenu(taskItem);
+            }
+        }
+
+        private void ShowTaskItemContextMenu(TaskItem taskItem)
+        {
+            var task = taskItem.TaskDetails;
+
             var contextMenu = new MenuFlyout();
-            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Rename task", Command = new DelegateCommand<TodoTask>(RenameTask), CommandParameter = task });
-            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Delete task", Command = new DelegateCommand<TodoTask>(DeleteTask), CommandParameter = task });
-            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Open in To Do", Command = new DelegateCommand<TodoTask>(OpenTaskInToDoApp), CommandParameter = task });
+            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Rename task", Command = new DelegateCommand<TaskItem>(RenameTask), CommandParameter = taskItem });
+            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Delete task", Command = new DelegateCommand<TaskItem>(DeleteTask), CommandParameter = taskItem });
+            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Open in To Do", Command = new DelegateCommand<TaskItem>(OpenTaskInToDoApp), CommandParameter = taskItem });
 
             switch (task.Status)
             {
                 case Microsoft.Graph.TaskStatus.Completed:
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Unmark as completed", Command = new DelegateCommand<TaskItem>(UnmarkTaskAsCompleted), CommandParameter = taskItem });
                     break;
 
                 default:
-                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Select for focus session", Command = new DelegateCommand<TodoTask>(SelectTaskForFocusSession), CommandParameter = task });
-                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Mark as completed", Command = new DelegateCommand<TodoTask>(SelectTaskForFocusSession), CommandParameter = task });
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Select for focus session", Command = new DelegateCommand<TaskItem>(SelectTaskForFocusSession), CommandParameter = taskItem });
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Mark as completed", Command = new DelegateCommand<TaskItem>(MarkTaskAsCompleted), CommandParameter = taskItem });
                     break;
             }
 
-            contextMenu.ShowAt(targetElement);
+            contextMenu.ShowAt(taskItem);
         }
 
-        private void RenameTask(TodoTask task)
+        private void RenameTask(TaskItem taskItem)
         {
             System.Diagnostics.Debug.WriteLine("Rename task");
+            taskItem.IsEditModeEnabled = true;
         }
 
-        private void DeleteTask(TodoTask task)
+        private void DeleteTask(TaskItem taskItem)
         {
             System.Diagnostics.Debug.WriteLine("Delete task");
+            var task = taskItem.TaskDetails;
+            if (task.Status == Microsoft.Graph.TaskStatus.Completed)
+            {
+                CompletedTasks.Remove(task);
+            }
+            else
+            {
+                AvailableTasks.Remove(task);
+            }
         }
 
-        private void OpenTaskInToDoApp(TodoTask task)
+        private void OpenTaskInToDoApp(TaskItem taskItem)
         {
             System.Diagnostics.Debug.WriteLine("Open task in To Do");
         }
 
-        private void SelectTaskForFocusSession(TodoTask task)
+        private void SelectTaskForFocusSession(TaskItem taskItem)
         {
-            System.Diagnostics.Debug.WriteLine("Open task in To Do");
+            System.Diagnostics.Debug.WriteLine("Select task for focus session");
+        }
+
+        private void MarkTaskAsCompleted(TaskItem taskItem)
+        {
+            System.Diagnostics.Debug.WriteLine("Mark task as completed");
+            var task = taskItem.TaskDetails;
+
+            task.Status = Microsoft.Graph.TaskStatus.Completed;
+
+            AvailableTasks.Remove(task);
+            CompletedTasks.Add(task);
+        }
+
+        private void UnmarkTaskAsCompleted(TaskItem taskItem)
+        {
+            System.Diagnostics.Debug.WriteLine("Unmark task as completed");
+            var task = taskItem.TaskDetails;
+
+            task.Status = Microsoft.Graph.TaskStatus.NotStarted;
+
+            CompletedTasks.Remove(task);
+            AvailableTasks.Add(task);
+        }
+
+        /// <summary>
+        /// Helper function for finding the TaskItem element in the VisualTree.
+        /// May return null if the element cannot be found.
+        /// </summary>
+        /// <param name="originalSource"></param>
+        /// <returns></returns>
+        private TaskItem GetChildTaskItem(object originalSource)
+        {
+            var sourceElement = originalSource as FrameworkElement;
+            if (sourceElement is TaskItem taskItem)
+            {
+                return taskItem;
+            }
+
+            ListViewItemPresenter itemPresenter;
+            if (sourceElement is ListViewItemPresenter)
+            {
+                itemPresenter = sourceElement as ListViewItemPresenter;
+            }
+            else
+            {
+                DependencyObject temp = sourceElement;
+                while (temp.GetType() != typeof(ListViewItemPresenter))
+                {
+                    temp = VisualTreeHelper.GetParent(temp);
+                    if (temp == null)
+                    {
+                        return null;
+                    }
+                }
+
+                itemPresenter = temp as ListViewItemPresenter;
+            }
+
+            return itemPresenter.FindDescendant<TaskItem>();
         }
 
         private class DelegateCommand<T> : ICommand
