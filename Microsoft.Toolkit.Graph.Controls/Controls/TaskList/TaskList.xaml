@@ -60,8 +60,7 @@
                                     SelectedIndex="{Binding SelectedTaskListIndex, RelativeSource={RelativeSource TemplatedParent}}">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
-                                            <TextBlock 
-                                                Text="{Binding DisplayName}" />
+                                            <TextBlock Text="{Binding DisplayName}" />
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
@@ -92,9 +91,7 @@
                             ItemTemplate="{StaticResource TaskItemTemplate}"
                             SelectionMode="Multiple"
                             x:Name="PART_AvailableTasksListView"
-                            x:Uid="TaskList_AvailableTasks">
-                            
-                        </ListView>
+                            x:Uid="TaskList_AvailableTasks" />
 
                         <!-- Completed tasks -->
                         <ListView

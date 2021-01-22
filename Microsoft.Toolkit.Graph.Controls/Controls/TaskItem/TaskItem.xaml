@@ -63,13 +63,13 @@
                             FontFamily="{TemplateBinding FontFamily}"
                             Foreground="{TemplateBinding Foreground}"
                             Grid.Column="1"
-                            Text="{Binding TaskDetails.Title, RelativeSource={RelativeSource TemplatedParent}}"
+                            Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}"
                             TextDecorations="{Binding TaskDetails.Status, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TaskStatusToTextDecorationsConverter}}"
                             Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolNegationConverter}}" />
                         <TextBox 
                             Grid.Column="1"
-                            Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}}" />
-
+                            Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}}"
+                            x:Name="PART_TaskTitleInputTextBox" />
 
                         <TextBlock
                             FontFamily="{TemplateBinding FontFamily}"
