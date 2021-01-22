@@ -1,6 +1,5 @@
 ﻿using Microsoft.Graph;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {

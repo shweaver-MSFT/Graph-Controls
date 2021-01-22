@@ -73,13 +73,11 @@
                                 Orientation="Horizontal">
                                 <!-- Add task button -->
                                 <Button x:Name="PART_AddButton">
-                                    <SymbolIcon 
-                                        Symbol="Add" />
+                                    <SymbolIcon Symbol="Add" />
                                 </Button>
                                 <!-- More options button -->
                                 <Button x:Name="PART_OptionsButton">
-                                    <SymbolIcon 
-                                        Symbol="More" />
+                                    <SymbolIcon Symbol="More" />
                                 </Button>
                             </StackPanel>
                         </Grid>
@@ -87,15 +85,23 @@
                         <!-- Available tasks -->
                         <ListView
                             Header="Select a task for your session"
+                            IsItemClickEnabled="True"
+                            IsMultiSelectCheckBoxEnabled="False"
+                            IsRightTapEnabled="True"
                             ItemsSource="{Binding AvailableTasks, RelativeSource={RelativeSource TemplatedParent}}"
                             ItemTemplate="{StaticResource TaskItemTemplate}"
-                            x:Uid="TaskList_AvailableTasks" />
+                            SelectionMode="Multiple"
+                            x:Name="PART_AvailableTasksListView"
+                            x:Uid="TaskList_AvailableTasks">
+                            
+                        </ListView>
 
                         <!-- Completed tasks -->
                         <ListView
                             Header="Completed tasks"
                             ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
                             ItemTemplate="{StaticResource TaskItemTemplate}"
+                            SelectionMode="None"
                             x:Uid="TaskList_CompletedTasks" />
                     </StackPanel>
                 </ControlTemplate>
