@@ -287,27 +287,23 @@ namespace Microsoft.Toolkit.Graph.Controls
                 return taskItem;
             }
 
-            ListViewItemPresenter itemPresenter;
             if (sourceElement is ListViewItemPresenter)
             {
-                itemPresenter = sourceElement as ListViewItemPresenter;
+                var itemPresenter = sourceElement as ListViewItemPresenter;
+                return itemPresenter.FindDescendant<TaskItem>();
             }
-            else
+
+            DependencyObject temp = sourceElement;
+            while (temp.GetType() != typeof(TaskItem))
             {
-                DependencyObject temp = sourceElement;
-                while (temp.GetType() != typeof(ListViewItemPresenter))
+                temp = VisualTreeHelper.GetParent(temp);
+                if (temp == null)
                 {
-                    temp = VisualTreeHelper.GetParent(temp);
-                    if (temp == null)
-                    {
-                        return null;
-                    }
+                    return null;
                 }
-
-                itemPresenter = temp as ListViewItemPresenter;
             }
 
-            return itemPresenter.FindDescendant<TaskItem>();
+            return temp as TaskItem;
         }
 
         private class DelegateCommand<T> : ICommand
