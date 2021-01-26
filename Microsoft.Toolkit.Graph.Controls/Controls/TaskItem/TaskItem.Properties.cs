@@ -1,6 +1,5 @@
-﻿using Microsoft.Graph;
-using System;
-using System.ComponentModel;
+﻿using System;
+using Microsoft.Graph;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -32,7 +31,16 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 if (d is TaskItem taskItem)
                 {
-                    taskItem.TaskTitle = taskItem.TaskDetails.Title;
+                    if (taskItem.TaskDetails == null)
+                    {
+                        // Reset any TaskDetails dependent properties
+                        taskItem.TaskTitle = null;
+                    }
+                    else
+                    {
+                        // Update any TaskDetails dependent properties
+                        taskItem.TaskTitle = taskItem.TaskDetails.Title;
+                    }
                 }
             });
         }
@@ -56,7 +64,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             await d.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (d is TaskItem taskItem)
+                if (d is TaskItem taskItem && taskItem._taskTitleInputTextBox != null)
                 {
                     if (taskItem.IsEditModeEnabled)
                     {
@@ -74,7 +82,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// 
+        /// Gets or sets the task's title value.
         /// </summary>
         public string TaskTitle
         {
@@ -94,6 +102,11 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 if (d is TaskItem taskItem)
                 {
+                    if (taskItem.TaskDetails == null)
+                    {
+                        taskItem.TaskDetails = new TodoTask();
+                    }
+
                     taskItem.TaskDetails.Title = taskItem.TaskTitle;
                 }
             });

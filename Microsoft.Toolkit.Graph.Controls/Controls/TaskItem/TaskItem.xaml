@@ -50,7 +50,7 @@
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition />
-                            <RowDefinition />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <CheckBox 
@@ -71,12 +71,12 @@
                             Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}}"
                             x:Name="PART_TaskTitleInputTextBox" />
 
-                        <TextBlock
+                        <!--<TextBlock
                             FontFamily="{TemplateBinding FontFamily}"
                             Foreground="{TemplateBinding Foreground}"
                             Grid.Column="1"
                             Grid.Row="1"
-                            Text="25 min" />
+                            Text="25 min" />-->
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

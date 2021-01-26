@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
@@ -32,6 +35,7 @@ namespace Microsoft.Toolkit.Graph.Controls
             if (_taskTitleInputTextBox != null)
             {
                 _taskTitleInputTextBox.LostFocus -= TaskTitleInputTextBox_LostFocus;
+                _taskTitleInputTextBox.KeyUp -= TaskTitleInputTextBox_KeyUp;
             }
 
             _taskTitleInputTextBox = GetTemplateChild(TaskTitleInputTextBoxPart) as TextBox;
@@ -39,12 +43,23 @@ namespace Microsoft.Toolkit.Graph.Controls
             if (_taskTitleInputTextBox != null)
             {
                 _taskTitleInputTextBox.LostFocus += TaskTitleInputTextBox_LostFocus;
+                _taskTitleInputTextBox.KeyUp += TaskTitleInputTextBox_KeyUp;
+            }
+        }
+
+        private void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            switch (e.Key)
+            {
+                case VirtualKey.Enter:
+                    TrySaveEdits();
+                    break;
             }
         }
 
         private void TaskTitleInputTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            IsEditModeEnabled = false;
+            TrySaveEdits();
         }
 
         /// <inheritdoc/>
@@ -59,6 +74,20 @@ namespace Microsoft.Toolkit.Graph.Controls
             TaskDetails = null;
             IsEditModeEnabled = false;
             return Task.CompletedTask;
+        }
+
+        private void TrySaveEdits()
+        {
+            if (string.IsNullOrWhiteSpace(_taskTitleInputTextBox.Text))
+            {
+                return;
+            }
+
+            // TODO: Save the changes to the Graph
+            TaskDetails.CreatedDateTime = DateTimeOffset.Now;
+
+            IsEditModeEnabled = false;
+            this.Focus(FocusState.Programmatic);
         }
     }
 }

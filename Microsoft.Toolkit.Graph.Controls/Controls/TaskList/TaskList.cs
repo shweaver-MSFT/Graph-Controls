@@ -99,6 +99,8 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc/>
         protected override async Task LoadDataAsync()
         {
+            VisualStateManager.GoToState(this, "Loading", false);
+
             // Fetch the Graph Data
             try
             {
@@ -146,22 +148,28 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <inheritdoc/>
-        protected override Task ClearDataAsync()
+        protected override async Task ClearDataAsync()
         {
-            TaskLists.Clear();
-            CompletedTasks.Clear();
-            AvailableTasks.Clear();
-            SelectedTaskListIndex = 0;
-
-            return Task.CompletedTask;
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                SelectedTaskList = null;
+                TaskLists.Clear();
+                CompletedTasks.Clear();
+                AvailableTasks.Clear();
+                SelectedTaskListIndex = 0;
+            });
         }
 
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                AvailableTasks.Add(new TodoTask() { Title = "This is a test" });
-                System.Diagnostics.Debug.WriteLine("Add clicked: " + AvailableTasks.Count());
+                if (_availableTasksListView != null && _availableTasksListView.Items.Count > 0 && _availableTasksListView.Items[0] is TodoTask task && task.CreatedDateTime == null)
+                {
+                    return;
+                }
+
+                AvailableTasks.Insert(0, new TodoTask());
             });
         }
 
@@ -178,7 +186,6 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private void AvailableTasksListView_ContextRequested(object sender, ContextRequestedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Context requested");
             var taskItem = GetChildTaskItem(e.OriginalSource);
             if (taskItem != null)
             {
@@ -188,8 +195,6 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private void CompletedTasksListView_ContextRequested(object sender, ContextRequestedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Context requested");
-
             var taskItem = GetChildTaskItem(e.OriginalSource);
             if (taskItem != null)
             {
@@ -199,6 +204,11 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private void ShowTaskItemContextMenu(TaskItem taskItem)
         {
+            if (taskItem.IsEditModeEnabled)
+            {
+                return;
+            }
+
             var task = taskItem.TaskDetails;
 
             var contextMenu = new MenuFlyout();
@@ -223,14 +233,15 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private void RenameTask(TaskItem taskItem)
         {
-            System.Diagnostics.Debug.WriteLine("Rename task");
             taskItem.IsEditModeEnabled = true;
         }
 
         private void DeleteTask(TaskItem taskItem)
         {
-            System.Diagnostics.Debug.WriteLine("Delete task");
             var task = taskItem.TaskDetails;
+
+            // TODO: Delete task from Graph.
+
             if (task.Status == Microsoft.Graph.TaskStatus.Completed)
             {
                 CompletedTasks.Remove(task);

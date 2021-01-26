@@ -21,6 +21,17 @@
         <local:TaskItem TaskDetails="{Binding}" />
     </DataTemplate>
 
+    <DataTemplate x:Key="NewTaskItemTemplate">
+        <local:TaskItem 
+            IsEditModeEnabled="True"
+            TaskDetails="{Binding}" />
+    </DataTemplate>
+
+    <local:TaskItemTemplateSelector 
+        NewTask="{StaticResource NewTaskItemTemplate}"
+        Normal="{StaticResource TaskItemTemplate}"
+        x:Key="TaskItemTemplateSelector" />
+
     <Style TargetType="local:TaskList">
         <Setter Property="Background" Value="{ThemeResource TaskListBackground}" />
         <Setter Property="BackgroundSizing" Value="{ThemeResource TaskListBackgroundSizing}" />
@@ -31,79 +42,122 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TaskList">
-                    <StackPanel
-                        Background="{TemplateBinding Background}"
-                        BackgroundSizing="{TemplateBinding BackgroundSizing}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="{TemplateBinding CornerRadius}"
-                        Margin="{TemplateBinding Margin}">
-
-                        <!-- Header panel -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Left side -->
-                            <StackPanel Orientation="Horizontal">
-                                <SymbolIcon 
-                                    Symbol="Accept" />
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Text="My Day" 
-                                    x:Uid="TaskList_MyDay" />
-                                <ComboBox 
-                                    ItemsSource="{Binding TaskLists, RelativeSource={RelativeSource TemplatedParent}}"
-                                    SelectedIndex="{Binding SelectedTaskListIndex, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding DisplayName}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-
-                            <!-- Right side -->
-                            <StackPanel 
-                                Grid.Column="2"
-                                Orientation="Horizontal">
-                                <!-- Add task button -->
-                                <Button x:Name="PART_AddButton">
-                                    <SymbolIcon Symbol="Add" />
-                                </Button>
-                                <!-- More options button -->
-                                <Button x:Name="PART_OptionsButton">
-                                    <SymbolIcon Symbol="More" />
-                                </Button>
-                            </StackPanel>
+                    <Grid>
+                        <!-- Loading -->
+                        <Grid x:Name="LoadingPanel">
+                            <TextBlock Text="Loading..." />
                         </Grid>
 
-                        <!-- Available tasks -->
-                        <ListView
-                            Header="Select a task for your session"
-                            IsItemClickEnabled="True"
-                            IsMultiSelectCheckBoxEnabled="False"
-                            IsRightTapEnabled="True"
-                            ItemsSource="{Binding AvailableTasks, RelativeSource={RelativeSource TemplatedParent}}"
-                            ItemTemplate="{StaticResource TaskItemTemplate}"
-                            SelectionMode="Multiple"
-                            x:Name="PART_AvailableTasksListView"
-                            x:Uid="TaskList_AvailableTasks" />
+                        <!-- Logged out -->
+                        <Grid
+                            Visibility="Collapsed"
+                            x:Name="LoggedOutPanel">
+                            <TextBlock Text="Sign in please" />
+                        </Grid>
 
-                        <!-- Completed tasks -->
-                        <ListView
-                            Header="Completed tasks"
-                            IsItemClickEnabled="True"
-                            IsRightTapEnabled="True"
-                            ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
-                            ItemTemplate="{StaticResource TaskItemTemplate}"
-                            SelectionMode="None"
-                            x:Name="PART_CompletedTasksListView"
-                            x:Uid="TaskList_CompletedTasks" />
-                    </StackPanel>
+                        <!-- Logged in -->
+                        <StackPanel
+                            Background="{TemplateBinding Background}"
+                            BackgroundSizing="{TemplateBinding BackgroundSizing}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Margin="{TemplateBinding Margin}"
+                            Visibility="Collapsed"
+                            x:Name="LoggedInPanel">
+
+                            <!-- Header panel -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left side -->
+                                <StackPanel Orientation="Horizontal">
+                                    <SymbolIcon 
+                                        Symbol="Accept" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Text="My Day" 
+                                        x:Uid="TaskList_MyDay" />
+                                    <ComboBox 
+                                        ItemsSource="{Binding TaskLists, RelativeSource={RelativeSource TemplatedParent}}"
+                                        SelectedIndex="{Binding SelectedTaskListIndex, RelativeSource={RelativeSource TemplatedParent}}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DisplayName}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Right side -->
+                                <StackPanel 
+                                    Grid.Column="2"
+                                    Orientation="Horizontal">
+                                    <!-- Add task button -->
+                                    <Button x:Name="PART_AddButton">
+                                        <SymbolIcon Symbol="Add" />
+                                    </Button>
+                                    <!-- More options button -->
+                                    <Button x:Name="PART_OptionsButton">
+                                        <SymbolIcon Symbol="More" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Available tasks -->
+                            <ListView
+                                Header="Select a task for your session"
+                                IsItemClickEnabled="True"
+                                IsMultiSelectCheckBoxEnabled="False"
+                                IsRightTapEnabled="True"
+                                ItemsSource="{Binding AvailableTasks, RelativeSource={RelativeSource TemplatedParent}}"
+                                ItemTemplateSelector="{StaticResource TaskItemTemplateSelector}"
+                                SelectionMode="Multiple"
+                                x:Name="PART_AvailableTasksListView"
+                                x:Uid="TaskList_AvailableTasks" />
+
+                            <!-- Completed tasks -->
+                            <ListView
+                                Header="Completed tasks"
+                                IsItemClickEnabled="True"
+                                IsRightTapEnabled="True"
+                                ItemsSource="{Binding CompletedTasks, RelativeSource={RelativeSource TemplatedParent}}"
+                                ItemTemplate="{StaticResource TaskItemTemplate}"
+                                SelectionMode="None"
+                                x:Name="PART_CompletedTasksListView"
+                                x:Uid="TaskList_CompletedTasks" />
+                        </StackPanel>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="LoggedOut">
+                                    <VisualState.Setters>
+                                        <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="LoggedOutPanel.Visibility" Value="Visible"></Setter>
+                                        <Setter Target="LoggedInPanel.Visibility" Value="Collapsed"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Loading">
+                                    <VisualState.Setters>
+                                        <Setter Target="LoadingPanel.Visibility" Value="Visible"></Setter>
+                                        <Setter Target="LoggedOutPanel.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="LoggedInPanel.Visibility" Value="Collapsed"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="LoggedIn">
+                                    <VisualState.Setters>
+                                        <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="LoggedInPanel.Visibility" Value="Visible"></Setter>
+                                        <Setter Target="LoggedOutPanel.Visibility" Value="Collapsed"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
