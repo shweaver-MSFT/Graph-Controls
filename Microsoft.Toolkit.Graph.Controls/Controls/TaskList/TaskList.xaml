@@ -42,29 +42,37 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TaskList">
-                    <Grid>
+                    <Grid
+                        Background="{TemplateBinding Background}"
+                        BackgroundSizing="{TemplateBinding BackgroundSizing}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Margin="{TemplateBinding Margin}">
+
                         <!-- Loading -->
                         <Grid x:Name="LoadingPanel">
                             <TextBlock Text="Loading..." />
                         </Grid>
 
+                        <!-- Error -->
+                        <Grid
+                            Visibility="Collapsed"
+                            x:Name="ErrorPanel">
+                            <TextBlock Text="Error" />
+                        </Grid>
+
                         <!-- Logged out -->
                         <Grid
                             Visibility="Collapsed"
-                            x:Name="LoggedOutPanel">
+                            x:Name="SignedOutPanel">
                             <TextBlock Text="Sign in please" />
                         </Grid>
 
                         <!-- Logged in -->
                         <StackPanel
-                            Background="{TemplateBinding Background}"
-                            BackgroundSizing="{TemplateBinding BackgroundSizing}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="{TemplateBinding CornerRadius}"
-                            Margin="{TemplateBinding Margin}"
                             Visibility="Collapsed"
-                            x:Name="LoggedInPanel">
+                            x:Name="SignedInPanel">
 
                             <!-- Header panel -->
                             <Grid>
@@ -134,25 +142,25 @@
 
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
-                                <VisualState x:Name="LoggedOut">
+                                <!-- -->
+                                <VisualState x:Name="Loading" />
+
+                                <VisualState x:Name="SignedOut">
                                     <VisualState.Setters>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
-                                        <Setter Target="LoggedOutPanel.Visibility" Value="Visible"></Setter>
-                                        <Setter Target="LoggedInPanel.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="SignedOutPanel.Visibility" Value="Visible"></Setter>
                                     </VisualState.Setters>
                                 </VisualState>
-                                <VisualState x:Name="Loading">
-                                    <VisualState.Setters>
-                                        <Setter Target="LoadingPanel.Visibility" Value="Visible"></Setter>
-                                        <Setter Target="LoggedOutPanel.Visibility" Value="Collapsed"></Setter>
-                                        <Setter Target="LoggedInPanel.Visibility" Value="Collapsed"></Setter>
-                                    </VisualState.Setters>
-                                </VisualState>
-                                <VisualState x:Name="LoggedIn">
+                                <VisualState x:Name="SignedIn">
                                     <VisualState.Setters>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
-                                        <Setter Target="LoggedInPanel.Visibility" Value="Visible"></Setter>
-                                        <Setter Target="LoggedOutPanel.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="SignedInPanel.Visibility" Value="Visible"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Error">
+                                    <VisualState.Setters>
+                                        <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="ErrorPanel.Visibility" Value="Visible"></Setter>
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

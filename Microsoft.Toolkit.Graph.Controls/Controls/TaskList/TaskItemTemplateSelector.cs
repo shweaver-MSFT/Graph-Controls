@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Controls.Extensions;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -23,8 +24,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc />
         protected override DataTemplate SelectTemplateCore(object item)
         {
-            var task = item as TodoTask;
-            if (task != null && task.CreatedDateTime == null)
+            if (item is TodoTask task && task.IsNew())
             {
                 return NewTask;
             }

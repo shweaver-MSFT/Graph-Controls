@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Graph.Providers;
-using Windows.Foundation.Diagnostics;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace Microsoft.Toolkit.Graph.Controls
@@ -12,16 +12,36 @@ namespace Microsoft.Toolkit.Graph.Controls
     public abstract class BaseGraphControl : Control
     {
         /// <summary>
-        /// Gets or sets a value indicating whether the control is loading and has not established a sign-in state.
+        /// An list of common states that Graph based controls should support at a minimum.
         /// </summary>
-        public bool IsLoading { get; protected set; }
+        public enum CommonStates
+        {
+            /// <summary>
+            /// The control is in a indeterminate state
+            /// </summary>
+            Loading,
+
+            /// <summary>
+            /// The control has Graph context and can behave properly
+            /// </summary>
+            SignedIn,
+
+            /// <summary>
+            /// The control does not have Graph context and cannot load any data.
+            /// </summary>
+            SignedOut,
+
+            /// <summary>
+            /// There was an error loading the control.
+            /// </summary>
+            Error,
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseGraphControl"/> class.
         /// </summary>
         public BaseGraphControl()
         {
-            IsLoading = false;
             ProviderManager.Instance.ProviderUpdated += async (s, a) => await UpdateAsync();
         }
 
@@ -38,14 +58,15 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         protected async Task UpdateAsync()
         {
-            IsLoading = true;
+            GoToVisualState(CommonStates.Loading);
+
             try
             {
                 var provider = ProviderManager.Instance.GlobalProvider;
                 if (provider == null)
                 {
                     await ClearDataAsync();
-                    IsLoading = false;
+                    GoToVisualState(CommonStates.SignedOut);
                     return;
                 }
 
@@ -53,14 +74,14 @@ namespace Microsoft.Toolkit.Graph.Controls
                 {
                     case ProviderState.SignedIn:
                         await LoadDataAsync();
-                        IsLoading = false;
+                        GoToVisualState(CommonStates.SignedIn);
                         break;
                     case ProviderState.SignedOut:
                         await ClearDataAsync();
-                        IsLoading = false;
+                        GoToVisualState(CommonStates.SignedOut);
                         break;
                     case ProviderState.Loading:
-                        IsLoading = true;
+                        GoToVisualState(CommonStates.Loading);
                         break;
                 }
             }
@@ -68,7 +89,7 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 System.Diagnostics.Debug.WriteLine(e);
                 IsEnabled = false;
-                IsLoading = false;
+                GoToVisualState(CommonStates.Error);
             }
         }
 
@@ -88,6 +109,28 @@ namespace Microsoft.Toolkit.Graph.Controls
         protected virtual Task ClearDataAsync()
         {
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="useTransitions"></param>
+        /// <returns></returns>
+        protected bool GoToVisualState(CommonStates state, bool useTransitions = false)
+        {
+            return GoToVisualState(state.ToString(), useTransitions);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="useTransitions"></param>
+        /// <returns></returns>
+        protected bool GoToVisualState(string state, bool useTransitions = false)
+        {
+            return VisualStateManager.GoToState(this, state, useTransitions);
         }
     }
 }

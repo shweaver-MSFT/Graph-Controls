@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Controls.Extensions;
 using Microsoft.Toolkit.Graph.Providers;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 using Windows.UI.Xaml;
@@ -44,6 +45,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         protected override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
+            GoToVisualState(CommonStates.Loading);
 
             if (_addButton != null)
             {
@@ -99,18 +101,11 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc/>
         protected override async Task LoadDataAsync()
         {
-            VisualStateManager.GoToState(this, "Loading", false);
+            GoToVisualState(CommonStates.Loading);
 
-            // Fetch the Graph Data
-            try
-            {
-                var graph = ProviderManager.Instance.GlobalProvider.Graph;
-                var taskListsPage = await graph.Me.Todo.Lists.Request().GetAsync();
-                TaskLists = taskListsPage.CurrentPage;
-            }
-            catch
-            {
-            }
+            var graph = ProviderManager.Instance.GlobalProvider.Graph;
+            var taskListsPage = await graph.Me.Todo.Lists.Request().GetAsync();
+            TaskLists = taskListsPage.CurrentPage;
 
             // Apply the Graph data
             if (TaskLists != null && TaskLists.Count() > 0)
@@ -164,7 +159,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                if (_availableTasksListView != null && _availableTasksListView.Items.Count > 0 && _availableTasksListView.Items[0] is TodoTask task && task.CreatedDateTime == null)
+                if (_availableTasksListView != null && _availableTasksListView.Items.Count > 0 && _availableTasksListView.Items[0] is TodoTask task && task.IsNew())
                 {
                     return;
                 }

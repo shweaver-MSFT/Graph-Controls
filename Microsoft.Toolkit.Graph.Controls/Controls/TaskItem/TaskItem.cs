@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Toolkit.Graph.Providers;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -85,6 +86,10 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             // TODO: Save the changes to the Graph
             TaskDetails.CreatedDateTime = DateTimeOffset.Now;
+
+            var graph = ProviderManager.Instance.GlobalProvider.Graph;
+            //await graph.Me.Todo.
+            //var taskListsPage = await graph.Me.Todo.Lists.Request().GetAsync();
 
             IsEditModeEnabled = false;
             this.Focus(FocusState.Programmatic);
