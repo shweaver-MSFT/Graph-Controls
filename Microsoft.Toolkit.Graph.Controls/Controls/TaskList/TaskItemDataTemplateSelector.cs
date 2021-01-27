@@ -9,7 +9,7 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// Selects the appropriate template based upon the item metadata.
     /// New tasks should appear ready for input.
     /// </summary>
-    public class TaskItemTemplateSelector : DataTemplateSelector
+    public class TaskItemDataTemplateSelector : DataTemplateSelector
     {
         /// <summary>
         /// Gets or sets the default template for TaskItems.
@@ -24,7 +24,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc />
         protected override DataTemplate SelectTemplateCore(object item)
         {
-            if (item is TodoTask task && task.IsNew())
+            if (item is TaskItemData taskItem && taskItem.TaskDetails.IsNew())
             {
                 return NewTask;
             }

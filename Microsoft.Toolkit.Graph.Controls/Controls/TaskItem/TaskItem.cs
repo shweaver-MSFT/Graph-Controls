@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Toolkit.Graph.Controls.Extensions;
 using Microsoft.Toolkit.Graph.Providers;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -35,7 +36,6 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             if (_taskTitleInputTextBox != null)
             {
-                _taskTitleInputTextBox.LostFocus -= TaskTitleInputTextBox_LostFocus;
                 _taskTitleInputTextBox.KeyUp -= TaskTitleInputTextBox_KeyUp;
             }
 
@@ -43,24 +43,16 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             if (_taskTitleInputTextBox != null)
             {
-                _taskTitleInputTextBox.LostFocus += TaskTitleInputTextBox_LostFocus;
                 _taskTitleInputTextBox.KeyUp += TaskTitleInputTextBox_KeyUp;
             }
         }
 
-        private void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
+        private async void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            switch (e.Key)
+            if (e.Key == VirtualKey.Enter)
             {
-                case VirtualKey.Enter:
-                    TrySaveEdits();
-                    break;
+                await TrySaveAsync();
             }
-        }
-
-        private void TaskTitleInputTextBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            TrySaveEdits();
         }
 
         /// <inheritdoc/>
@@ -77,22 +69,41 @@ namespace Microsoft.Toolkit.Graph.Controls
             return Task.CompletedTask;
         }
 
-        private void TrySaveEdits()
+        /// <summary>
+        /// Attempt to save any edits to the task.
+        /// </summary>
+        /// <returns>Success or failure boolean value.</returns>
+        protected async Task<bool> TrySaveAsync()
         {
-            if (string.IsNullOrWhiteSpace(_taskTitleInputTextBox.Text))
+            try
             {
-                return;
+                var task = TaskDetails;
+                var taskListId = TaskListId;
+
+                var inputText = _taskTitleInputTextBox.Text;
+                if (string.IsNullOrWhiteSpace(inputText))
+                {
+                    return false;
+                }
+
+                TaskDetails.Title = inputText;
+
+                var graph = ProviderManager.Instance.GlobalProvider.Graph;
+                var updatedTask = task.IsNew()
+                    ? await graph.Me.Todo.Lists[taskListId].Tasks.Request().AddAsync(task)
+                    : await graph.Me.Todo.Lists[taskListId].Tasks[task.Id].Request().UpdateAsync(task);
+
+                TaskDetails = updatedTask;
+
+                IsEditModeEnabled = false;
+                this.Focus(FocusState.Programmatic);
+                return true;
             }
-
-            // TODO: Save the changes to the Graph
-            TaskDetails.CreatedDateTime = DateTimeOffset.Now;
-
-            var graph = ProviderManager.Instance.GlobalProvider.Graph;
-            //await graph.Me.Todo.
-            //var taskListsPage = await graph.Me.Todo.Lists.Request().GetAsync();
-
-            IsEditModeEnabled = false;
-            this.Focus(FocusState.Programmatic);
+            catch (Exception e)
+            {
+                // TODO: Handle failure to save modified task details
+                return false;
+            }
         }
     }
 }

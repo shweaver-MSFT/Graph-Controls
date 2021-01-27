@@ -11,6 +11,21 @@ namespace Microsoft.Toolkit.Graph.Controls
     public partial class TaskItem
     {
         /// <summary>
+        /// Gets or sets the TaskList id property value.
+        /// </summary>
+        public string TaskListId
+        {
+            get { return (string)GetValue(TaskListIdProperty); }
+            set { SetValue(TaskListIdProperty, value); }
+        }
+
+        /// <summary>
+        /// Todo task list id value.
+        /// </summary>
+        public static readonly DependencyProperty TaskListIdProperty =
+            DependencyProperty.Register(nameof(TaskListId), typeof(string), typeof(TaskItem), new PropertyMetadata(null));
+
+        /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
         public TodoTask TaskDetails
@@ -23,27 +38,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty TaskDetailsProperty =
-            DependencyProperty.Register(nameof(TaskDetails), typeof(TodoTask), typeof(TaskItem), new PropertyMetadata(null, OnTaskDetailsChanged));
-
-        private static async void OnTaskDetailsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            await d.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                if (d is TaskItem taskItem)
-                {
-                    if (taskItem.TaskDetails == null)
-                    {
-                        // Reset any TaskDetails dependent properties
-                        taskItem.TaskTitle = null;
-                    }
-                    else
-                    {
-                        // Update any TaskDetails dependent properties
-                        taskItem.TaskTitle = taskItem.TaskDetails.Title;
-                    }
-                }
-            });
-        }
+            DependencyProperty.Register(nameof(TaskDetails), typeof(TodoTask), typeof(TaskItem), new PropertyMetadata(null));
 
         /// <summary>
         /// Gets or sets a value indicating whether the control is in an editable state.
@@ -68,46 +63,12 @@ namespace Microsoft.Toolkit.Graph.Controls
                 {
                     if (taskItem.IsEditModeEnabled)
                     {
-                        taskItem._taskTitleInputTextBox.Text = taskItem.TaskTitle;
                         taskItem._taskTitleInputTextBox.Focus(FocusState.Programmatic);
                     }
                     else
                     {
-                        // Save the updates
-                        taskItem.TaskTitle = taskItem._taskTitleInputTextBox.Text;
-                        taskItem._taskTitleInputTextBox.Text = string.Empty;
+                        taskItem.Focus(FocusState.Programmatic);
                     }
-                }
-            });
-        }
-
-        /// <summary>
-        /// Gets or sets the task's title value.
-        /// </summary>
-        public string TaskTitle
-        {
-            get { return (string)GetValue(TaskTitleProperty); }
-            set { SetValue(TaskTitleProperty, value); }
-        }
-
-        /// <summary>
-        /// Task title input text property.
-        /// </summary>
-        public static readonly DependencyProperty TaskTitleProperty =
-            DependencyProperty.Register(nameof(TaskTitle), typeof(string), typeof(TaskItem), new PropertyMetadata(string.Empty, OnTaskTitleChanged));
-
-        private static async void OnTaskTitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            await d.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                if (d is TaskItem taskItem)
-                {
-                    if (taskItem.TaskDetails == null)
-                    {
-                        taskItem.TaskDetails = new TodoTask();
-                    }
-
-                    taskItem.TaskDetails.Title = taskItem.TaskTitle;
                 }
             });
         }

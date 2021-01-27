@@ -9,6 +9,7 @@ using Microsoft.Toolkit.Uwp.UI.Extensions;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 
@@ -17,19 +18,19 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// <summary>
     /// foo
     /// </summary>
-    [TemplatePart(Name = AddButtonPart, Type = typeof(ButtonBase))]
-    [TemplatePart(Name = OptionsButtonPart, Type = typeof(ButtonBase))]
+    [TemplatePart(Name = AddTaskButtonPart, Type = typeof(ButtonBase))]
+    [TemplatePart(Name = OverflowMenuButtonPart, Type = typeof(ButtonBase))]
     [TemplatePart(Name = AvailableTasksListViewPart, Type = typeof(ListView))]
     [TemplatePart(Name = CompletedTasksListViewPart, Type = typeof(ListView))]
     public partial class TaskList : BaseGraphControl
     {
-        private const string AddButtonPart = "PART_AddButton";
-        private const string OptionsButtonPart = "PART_OptionsButton";
+        private const string AddTaskButtonPart = "PART_AddTaskButton";
+        private const string OverflowMenuButtonPart = "PART_OverflowMenuButton";
         private const string AvailableTasksListViewPart = "PART_AvailableTasksListView";
         private const string CompletedTasksListViewPart = "PART_CompletedTasksListView";
 
-        private Button _addButton;
-        private Button _optionsButton;
+        private Button _addTaskButton;
+        private Button _overflowMenuButton;
         private ListView _availableTasksListView;
         private ListView _completedTasksListView;
 
@@ -47,28 +48,28 @@ namespace Microsoft.Toolkit.Graph.Controls
             base.OnApplyTemplate();
             GoToVisualState(CommonStates.Loading);
 
-            if (_addButton != null)
+            if (_addTaskButton != null)
             {
-                _addButton.Click -= AddButton_Click;
+                _addTaskButton.Click -= AddTaskButton_Click;
             }
 
-            _addButton = GetTemplateChild(AddButtonPart) as Button;
+            _addTaskButton = GetTemplateChild(AddTaskButtonPart) as Button;
 
-            if (_addButton != null)
+            if (_addTaskButton != null)
             {
-                _addButton.Click += AddButton_Click;
+                _addTaskButton.Click += AddTaskButton_Click;
             }
 
-            if (_optionsButton != null)
+            if (_overflowMenuButton != null)
             {
-                _optionsButton.Click -= OptionsButton_Click;
+                _overflowMenuButton.Click -= OverflowMenuButton_Click;
             }
 
-            _optionsButton = GetTemplateChild(OptionsButtonPart) as Button;
+            _overflowMenuButton = GetTemplateChild(OverflowMenuButtonPart) as Button;
 
-            if (_optionsButton != null)
+            if (_overflowMenuButton != null)
             {
-                _optionsButton.Click += OptionsButton_Click;
+                _overflowMenuButton.Click += OverflowMenuButton_Click;
             }
 
             if (_availableTasksListView != null)
@@ -121,20 +122,23 @@ namespace Microsoft.Toolkit.Graph.Controls
                 }
 
                 SelectedTaskList = TaskLists[SelectedTaskListIndex];
-                System.Diagnostics.Debug.WriteLine(SelectedTaskList.Id);
 
                 var tasks = SelectedTaskList.Tasks;
                 if (tasks != null && tasks.Count() > 0)
                 {
+                    TaskListId = SelectedTaskList.Id;
+
                     foreach (TodoTask task in tasks)
                     {
+                        var taskData = new TaskItemData(task, TaskListId);
+
                         switch (task.Status)
                         {
                             case Microsoft.Graph.TaskStatus.Completed:
-                                CompletedTasks.Add(task);
+                                CompletedTasks.Add(taskData);
                                 break;
                             default:
-                                AvailableTasks.Add(task);
+                                AvailableTasks.Add(taskData);
                                 break;
                         }
                     }
@@ -155,22 +159,46 @@ namespace Microsoft.Toolkit.Graph.Controls
             });
         }
 
-        private async void AddButton_Click(object sender, RoutedEventArgs e)
+        private async void AddTaskButton_Click(object sender, RoutedEventArgs e)
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                if (_availableTasksListView != null && _availableTasksListView.Items.Count > 0 && _availableTasksListView.Items[0] is TodoTask task && task.IsNew())
+                if (_availableTasksListView != null &&
+                    _availableTasksListView.Items.Count > 0 &&
+                    _availableTasksListView.Items[0] is TaskItemData taskData &&
+                    taskData.TaskDetails.IsNew())
                 {
+                    // A new item is already ready for input.
                     return;
                 }
 
-                AvailableTasks.Insert(0, new TodoTask());
+                AvailableTasks.Insert(0, new TaskItemData(new TodoTask(), TaskListId));
             });
         }
 
-        private void OptionsButton_Click(object sender, RoutedEventArgs e)
+        private void OverflowMenuButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Options clicked");
+            var contextMenu = new MenuFlyout();
+            if (IsContentCollapsed)
+            {
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Show Microsoft To Do", Command = new DelegateCommand(ShowContent) });
+            }
+            else
+            {
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Hide Microsoft To Do", Command = new DelegateCommand(CollapseContent) });
+            }
+
+            switch (ProviderManager.Instance.GlobalProvider.State)
+            {
+                case ProviderState.SignedOut:
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "View Settings", Command = new DelegateCommand(LaunchToDoAppSettings) });
+                    break;
+                case ProviderState.SignedIn:
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Launch Microsoft To Do", Command = new DelegateCommand(LaunchToDoApp) });
+                    break;
+            }
+
+            contextMenu.ShowAt(sender as Button);
         }
 
         private void AvailableTasksListView_ItemClick(object sender, RoutedEventArgs e)
@@ -199,28 +227,27 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private void ShowTaskItemContextMenu(TaskItem taskItem)
         {
-            if (taskItem.IsEditModeEnabled)
-            {
-                return;
-            }
-
             var task = taskItem.TaskDetails;
 
             var contextMenu = new MenuFlyout();
-            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Rename task", Command = new DelegateCommand<TaskItem>(RenameTask), CommandParameter = taskItem });
             contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Delete task", Command = new DelegateCommand<TaskItem>(DeleteTask), CommandParameter = taskItem });
-            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Open in To Do", Command = new DelegateCommand<TaskItem>(OpenTaskInToDoApp), CommandParameter = taskItem });
 
-            switch (task.Status)
+            if (!taskItem.IsEditModeEnabled)
             {
-                case Microsoft.Graph.TaskStatus.Completed:
-                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Unmark as completed", Command = new DelegateCommand<TaskItem>(UnmarkTaskAsCompleted), CommandParameter = taskItem });
-                    break;
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Rename task", Command = new DelegateCommand<TaskItem>(RenameTask), CommandParameter = taskItem });
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Open in To Do", Command = new DelegateCommand<TaskItem>(OpenTaskInToDoApp), CommandParameter = taskItem });
 
-                default:
-                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Select for focus session", Command = new DelegateCommand<TaskItem>(SelectTaskForFocusSession), CommandParameter = taskItem });
-                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Mark as completed", Command = new DelegateCommand<TaskItem>(MarkTaskAsCompleted), CommandParameter = taskItem });
-                    break;
+                switch (task.Status)
+                {
+                    case Microsoft.Graph.TaskStatus.Completed:
+                        contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Unmark as completed", Command = new DelegateCommand<TaskItem>(UnmarkTaskAsCompleted), CommandParameter = taskItem });
+                        break;
+
+                    default:
+                        contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Select for focus session", Command = new DelegateCommand<TaskItem>(SelectTaskForFocusSession), CommandParameter = taskItem });
+                        contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Mark as completed", Command = new DelegateCommand<TaskItem>(MarkTaskAsCompleted), CommandParameter = taskItem });
+                        break;
+                }
             }
 
             contextMenu.ShowAt(taskItem);
@@ -231,19 +258,48 @@ namespace Microsoft.Toolkit.Graph.Controls
             taskItem.IsEditModeEnabled = true;
         }
 
-        private void DeleteTask(TaskItem taskItem)
+        private async void DeleteTask(TaskItem taskItem)
         {
             var task = taskItem.TaskDetails;
+            var taskListId = taskItem.TaskListId;
 
-            // TODO: Delete task from Graph.
+            // "New" tasks aren't actually saved to the Graph yet.
+            if (!task.IsNew())
+            {
+                try
+                {
+                    // Delete task from Graph.
+                    var graph = ProviderManager.Instance.GlobalProvider.Graph;
+                    await graph.Me.Todo.Lists[taskListId].Tasks[task.Id].Request().DeleteAsync();
+                }
+                catch
+                {
+                    // TODO: Handle failure to delete the task.
+                    return;
+                }
+            }
 
             if (task.Status == Microsoft.Graph.TaskStatus.Completed)
             {
-                CompletedTasks.Remove(task);
+                foreach (var ct in CompletedTasks)
+                {
+                    if (ct.TaskDetails.Id == task.Id)
+                    {
+                        CompletedTasks.Remove(ct);
+                        break;
+                    }
+                }
             }
             else
             {
-                AvailableTasks.Remove(task);
+                foreach (var at in AvailableTasks)
+                {
+                    if (at.TaskDetails.Id == task.Id)
+                    {
+                        AvailableTasks.Remove(at);
+                        break;
+                    }
+                }
             }
         }
 
@@ -252,31 +308,97 @@ namespace Microsoft.Toolkit.Graph.Controls
             System.Diagnostics.Debug.WriteLine("Open task in To Do");
         }
 
+        private void LaunchToDoApp()
+        {
+            System.Diagnostics.Debug.WriteLine("Launch To Do app");
+        }
+
+        private void LaunchToDoAppSettings()
+        {
+            System.Diagnostics.Debug.WriteLine("Launch To Do app settings");
+        }
+
+        private void ShowContent()
+        {
+            IsContentCollapsed = false;
+        }
+
+        private void CollapseContent()
+        {
+            IsContentCollapsed = true;
+        }
+
         private void SelectTaskForFocusSession(TaskItem taskItem)
         {
             System.Diagnostics.Debug.WriteLine("Select task for focus session");
+
+            if (taskItem.TaskDetails.IsNew())
+            {
+                var itemIndex = _availableTasksListView.IndexFromContainer(taskItem);
+                _availableTasksListView.SelectRange(new ItemIndexRange(itemIndex, 1));
+            }
         }
 
-        private void MarkTaskAsCompleted(TaskItem taskItem)
+        private async void MarkTaskAsCompleted(TaskItem taskItem)
         {
             System.Diagnostics.Debug.WriteLine("Mark task as completed");
             var task = taskItem.TaskDetails;
-
+            var previousTaskStatus = task.Status;
             task.Status = Microsoft.Graph.TaskStatus.Completed;
 
-            AvailableTasks.Remove(task);
-            CompletedTasks.Add(task);
+            try
+            {
+                var graph = ProviderManager.Instance.GlobalProvider.Graph;
+                await graph.Me.Todo.Lists[taskItem.TaskListId].Tasks[task.Id].Request().UpdateAsync(task);
+            }
+            catch
+            {
+                // Handle failure to mark the task as completed.
+                task.Status = previousTaskStatus;
+                return;
+            }
+
+            foreach (var at in AvailableTasks)
+            {
+                if (at.TaskDetails.Id == task.Id)
+                {
+                    AvailableTasks.Remove(at);
+                    break;
+                }
+            }
+
+            CompletedTasks.Add(new TaskItemData(task, TaskListId));
         }
 
-        private void UnmarkTaskAsCompleted(TaskItem taskItem)
+        private async void UnmarkTaskAsCompleted(TaskItem taskItem)
         {
             System.Diagnostics.Debug.WriteLine("Unmark task as completed");
             var task = taskItem.TaskDetails;
-
+            var previousTaskStatus = task.Status;
             task.Status = Microsoft.Graph.TaskStatus.NotStarted;
 
-            CompletedTasks.Remove(task);
-            AvailableTasks.Add(task);
+            try
+            {
+                var graph = ProviderManager.Instance.GlobalProvider.Graph;
+                await graph.Me.Todo.Lists[taskItem.TaskListId].Tasks[task.Id].Request().UpdateAsync(task);
+            }
+            catch
+            {
+                // Handle failure to mark the task as completed.
+                task.Status = previousTaskStatus;
+                return;
+            }
+
+            foreach (var ct in CompletedTasks)
+            {
+                if (ct.TaskDetails.Id == task.Id)
+                {
+                    CompletedTasks.Remove(ct);
+                    break;
+                }
+            }
+
+            AvailableTasks.Add(new TaskItemData(task, TaskListId));
         }
 
         /// <summary>
@@ -331,6 +453,28 @@ namespace Microsoft.Toolkit.Graph.Controls
             public void Execute(object parameter)
             {
                 _executeAction((T)parameter);
+            }
+        }
+
+        private class DelegateCommand : ICommand
+        {
+            private Action _executeAction;
+
+            public event EventHandler CanExecuteChanged = null;
+
+            public DelegateCommand(Action executeAction)
+            {
+                _executeAction = executeAction;
+            }
+
+            public bool CanExecute(object parameter = null)
+            {
+                return true;
+            }
+
+            public void Execute(object parameter = null)
+            {
+                _executeAction();
             }
         }
     }

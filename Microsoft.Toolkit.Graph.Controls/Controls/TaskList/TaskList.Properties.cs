@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Providers;
 using Windows.UI.Xaml;
 
 namespace Microsoft.Toolkit.Graph.Controls
@@ -11,6 +12,52 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// </summary>
     public partial class TaskList : BaseGraphControl
     {
+        public bool IsContentCollapsed
+        {
+            get { return (bool)GetValue(IsContentCollapsedProperty); }
+            set { SetValue(IsContentCollapsedProperty, value); }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static readonly DependencyProperty IsContentCollapsedProperty =
+            DependencyProperty.Register(nameof(IsContentCollapsed), typeof(bool), typeof(TaskList), new PropertyMetadata(false, OnIsContentCollapsedChanged));
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="d"></param>
+        /// <param name="e"></param>
+        public static void OnIsContentCollapsedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TaskList taskList)
+            {
+                if (taskList.IsContentCollapsed)
+                {
+                    taskList.GoToVisualState("Collapsed", true);
+                }
+                else
+                {
+                    switch (ProviderManager.Instance.GlobalProvider.State)
+                    {
+                        case ProviderState.SignedOut:
+                            taskList.GoToVisualState(CommonStates.SignedOut, true);
+                            break;
+                        case ProviderState.Loading:
+                            taskList.GoToVisualState(CommonStates.Loading, true);
+                            break;
+                        case ProviderState.SignedIn:
+                            taskList.GoToVisualState(CommonStates.SignedIn, true);
+                            break;
+                        default:
+                            taskList.GoToVisualState(CommonStates.Error, true);
+                            break;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Gets or sets the TaskListId property value. Used to set the default TaskList.
         /// </summary>
@@ -70,7 +117,6 @@ namespace Microsoft.Toolkit.Graph.Controls
             }
         }
 
-
         /// <summary>
         /// Gets or sets the SelectedTaskList property value.
         /// </summary>
@@ -79,9 +125,9 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public IList<TodoTask> AvailableTasks
+        public IList<TaskItemData> AvailableTasks
         {
-            get { return (IList<TodoTask>)GetValue(AvailableTasksProperty); }
+            get { return (IList<TaskItemData>)GetValue(AvailableTasksProperty); }
             set { SetValue(AvailableTasksProperty, value); }
         }
 
@@ -89,14 +135,14 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty AvailableTasksProperty =
-            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
+            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TaskItemData>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TaskItemData>()));
 
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public IList<TodoTask> CompletedTasks
+        public IList<TaskItemData> CompletedTasks
         {
-            get { return (IList<TodoTask>)GetValue(CompletedTasksProperty); }
+            get { return (IList<TaskItemData>)GetValue(CompletedTasksProperty); }
             set { SetValue(CompletedTasksProperty, value); }
         }
 
@@ -104,6 +150,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty CompletedTasksProperty =
-            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
+            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TaskItemData>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TaskItemData>()));
     }
 }
