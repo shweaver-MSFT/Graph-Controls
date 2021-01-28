@@ -1,6 +1,4 @@
-﻿using Microsoft.Graph;
-using Microsoft.Toolkit.Graph.Controls.Extensions;
-using Windows.UI.Xaml;
+﻿using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace Microsoft.Toolkit.Graph.Controls
@@ -24,7 +22,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc />
         protected override DataTemplate SelectTemplateCore(object item)
         {
-            if (item is TaskItemData taskItem && taskItem.TaskDetails.IsNew())
+            if (item is TaskItemData taskItem && taskItem.IsNew)
             {
                 return NewTask;
             }

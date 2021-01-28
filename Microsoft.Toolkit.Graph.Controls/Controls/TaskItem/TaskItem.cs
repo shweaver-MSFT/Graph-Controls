@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.Toolkit.Graph.Controls.Extensions;
-using Microsoft.Toolkit.Graph.Providers;
+using Microsoft.Toolkit.Graph.Controls.Controls.TaskList;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -13,11 +12,29 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// A visualization of a single Todo task item.
     /// </summary>
     [TemplatePart(Name = TaskTitleInputTextBoxPart, Type = typeof(TextBox))]
+    [TemplatePart(Name = TaskStatusCheckBoxPart, Type = typeof(CheckBox))]
     public partial class TaskItem : BaseGraphControl
     {
         private const string TaskTitleInputTextBoxPart = "PART_TaskTitleInputTextBox";
+        private const string TaskStatusCheckBoxPart = "PART_TaskStatusCheckBox";
 
         private TextBox _taskTitleInputTextBox;
+        private CheckBox _taskStatusCheckBox;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event RoutedEventHandler Checked;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event RoutedEventHandler Indeterminate;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public event RoutedEventHandler Unchecked;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskItem"/> class.
@@ -45,6 +62,39 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 _taskTitleInputTextBox.KeyUp += TaskTitleInputTextBox_KeyUp;
             }
+
+            if (_taskStatusCheckBox != null)
+            {
+                _taskStatusCheckBox.Checked -= TaskStatusCheckBox_Checked;
+                _taskStatusCheckBox.Indeterminate -= TaskStatusCheckBox_Indeterminate;
+                _taskStatusCheckBox.Unchecked -= TaskStatusCheckBox_Unchecked;
+            }
+
+            _taskStatusCheckBox = GetTemplateChild(TaskStatusCheckBoxPart) as CheckBox;
+
+            if (_taskStatusCheckBox != null)
+            {
+                _taskStatusCheckBox.Checked += TaskStatusCheckBox_Checked;
+                _taskStatusCheckBox.Indeterminate += TaskStatusCheckBox_Indeterminate;
+                _taskStatusCheckBox.Unchecked += TaskStatusCheckBox_Unchecked;
+            }
+        }
+
+        private void TaskStatusCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            // TODO: Save 
+            Checked?.Invoke(this, e);
+        }
+
+        private void TaskStatusCheckBox_Indeterminate(object sender, RoutedEventArgs e)
+        {
+            Indeterminate?.Invoke(this, e);
+        }
+
+        private void TaskStatusCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+
+            Unchecked?.Invoke(this, e);
         }
 
         private async void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
@@ -73,37 +123,33 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Attempt to save any edits to the task.
         /// </summary>
         /// <returns>Success or failure boolean value.</returns>
-        protected async Task<bool> TrySaveAsync()
+        public async Task<bool> TrySaveAsync()
         {
+            var inputText = _taskTitleInputTextBox.Text;
+            if (string.IsNullOrWhiteSpace(inputText))
+            {
+                return false;
+            }
+
+            TaskDetails.Title = inputText.Trim();
+            var taskData = new TaskItemData(TaskDetails, TaskListId);
+
             try
             {
-                var task = TaskDetails;
-                var taskListId = TaskListId;
-
-                var inputText = _taskTitleInputTextBox.Text;
-                if (string.IsNullOrWhiteSpace(inputText))
-                {
-                    return false;
-                }
-
-                TaskDetails.Title = inputText;
-
-                var graph = ProviderManager.Instance.GlobalProvider.Graph;
-                var updatedTask = task.IsNew()
-                    ? await graph.Me.Todo.Lists[taskListId].Tasks.Request().AddAsync(task)
-                    : await graph.Me.Todo.Lists[taskListId].Tasks[task.Id].Request().UpdateAsync(task);
-
-                TaskDetails = updatedTask;
-
-                IsEditModeEnabled = false;
-                this.Focus(FocusState.Programmatic);
-                return true;
+                TaskDetails = taskData.IsNew
+                    ? await TaskItemDataSource.AddTaskAsync(taskData.TaskListId, taskData.TaskDetails)
+                    : await TaskItemDataSource.UpdateTaskAsync(taskData.TaskListId, taskData.TaskDetails);
             }
-            catch (Exception e)
+            catch
             {
                 // TODO: Handle failure to save modified task details
                 return false;
             }
+
+            TaskTitle = TaskDetails.Title;
+            IsEditModeEnabled = false;
+            this.Focus(FocusState.Programmatic);
+            return true;
         }
     }
 }

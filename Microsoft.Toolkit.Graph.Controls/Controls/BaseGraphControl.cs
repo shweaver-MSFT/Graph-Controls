@@ -58,39 +58,42 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         protected async Task UpdateAsync()
         {
-            GoToVisualState(CommonStates.Loading);
-
-            try
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                var provider = ProviderManager.Instance.GlobalProvider;
-                if (provider == null)
-                {
-                    await ClearDataAsync();
-                    GoToVisualState(CommonStates.SignedOut);
-                    return;
-                }
+                GoToVisualState(CommonStates.Loading);
 
-                switch (provider.State)
+                try
                 {
-                    case ProviderState.SignedIn:
-                        await LoadDataAsync();
-                        GoToVisualState(CommonStates.SignedIn);
-                        break;
-                    case ProviderState.SignedOut:
+                    var provider = ProviderManager.Instance.GlobalProvider;
+                    if (provider == null)
+                    {
                         await ClearDataAsync();
                         GoToVisualState(CommonStates.SignedOut);
-                        break;
-                    case ProviderState.Loading:
-                        GoToVisualState(CommonStates.Loading);
-                        break;
+                        return;
+                    }
+
+                    switch (provider.State)
+                    {
+                        case ProviderState.SignedIn:
+                            await LoadDataAsync();
+                            GoToVisualState(CommonStates.SignedIn);
+                            break;
+                        case ProviderState.SignedOut:
+                            await ClearDataAsync();
+                            GoToVisualState(CommonStates.SignedOut);
+                            break;
+                        case ProviderState.Loading:
+                            GoToVisualState(CommonStates.Loading);
+                            break;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine(e);
-                IsEnabled = false;
-                GoToVisualState(CommonStates.Error);
-            }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine(e);
+                    IsEnabled = false;
+                    GoToVisualState(CommonStates.Error);
+                }
+            });
         }
 
         /// <summary>
