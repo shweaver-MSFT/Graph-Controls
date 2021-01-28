@@ -14,12 +14,10 @@ using Microsoft.Toolkit.Graph.Extensions;
 
 namespace Microsoft.Toolkit.Graph.Providers
 {
-    //// TODO: Move some of this to a simple base-class for non-MSAL parts related to Provider only and properties?
-
     /// <summary>
     /// <a href="https://github.com/AzureAD/microsoft-authentication-library-for-dotnet">MSAL.NET</a> provider helper for tracking authentication state using an <see cref="IAuthenticationProvider"/> class.
     /// </summary>
-    public class MsalProvider : IProvider
+    public class MsalProvider : BaseProvider
     {
         /// <summary>
         /// Gets or sets the MSAL.NET Client used to authenticate the user.
@@ -30,38 +28,6 @@ namespace Microsoft.Toolkit.Graph.Providers
         /// Gets or sets the provider used by the graph to manage requests.
         /// </summary>
         protected IAuthenticationProvider Provider { get; set; }
-
-        private ProviderState _state = ProviderState.Loading;
-
-        /// <inheritdoc/>
-        public ProviderState State
-        {
-            get
-            {
-                return _state;
-            }
-
-            private set
-            {
-                var current = _state;
-                _state = value;
-
-                StateChanged?.Invoke(this, new StateChangedEventArgs(current, _state));
-            }
-        }
-
-        /// <inheritdoc/>
-        public GraphServiceClient Graph { get; private set; }
-
-        /// <inheritdoc/>
-        public event EventHandler<StateChangedEventArgs> StateChanged;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MsalProvider"/> class. <see cref="CreateAsync"/>.
-        /// </summary>
-        private MsalProvider()
-        {
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsalProvider"/> class.
@@ -87,7 +53,7 @@ namespace Microsoft.Toolkit.Graph.Providers
         }
 
         /// <inheritdoc/>
-        public async Task AuthenticateRequestAsync(HttpRequestMessage request)
+        public override async Task AuthenticateRequestAsync(HttpRequestMessage request)
         {
             request.AddSdkVersion();
 
@@ -159,14 +125,14 @@ namespace Microsoft.Toolkit.Graph.Providers
         }
 
         /// <inheritdoc/>
-        public async Task LoginAsync()
+        public override async Task LoginAsync()
         {
             // Force fake request to start auth process
             await AuthenticateRequestAsync(new System.Net.Http.HttpRequestMessage());
         }
 
         /// <inheritdoc/>
-        public async Task LogoutAsync()
+        public override async Task LogoutAsync()
         {
             // Forcibly remove each user.
             foreach (var user in await Client.GetAccountsAsync())
