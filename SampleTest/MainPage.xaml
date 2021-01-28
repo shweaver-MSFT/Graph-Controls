@@ -47,7 +47,15 @@
                 <wgt:TaskList
                     Margin="20"
                     BorderBrush="Black"
-                    BorderThickness="1"></wgt:TaskList>
+                    BorderThickness="1" />
+
+                <!-- 
+                <wgt:TaskList>
+                    <wgt:TaskList.OverflowMenuItems>
+                        <MenuFlyoutItem Text="Custom action" Command={Binding DoCustomActionCommand}
+                    </wgt:TaskList.OverflowMenuItems>
+                </wgt:TaskList>
+                -->
             </StackPanel>
         </PivotItem>
         <PivotItem Header="PeoplePicker">
