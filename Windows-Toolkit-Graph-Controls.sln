@@ -38,7 +38,7 @@ Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "WPF-Packaged-App", "Samples
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Toolkit.Wpf.Graph.Providers", "Microsoft.Toolkit.Wpf.Graph.Providers\Microsoft.Toolkit.Wpf.Graph.Providers.csproj", "{8B9BFE42-F526-4961-A1FD-2D2B6AA0C305}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Toolkit.Uwp.Graph", "Microsoft.Toolkit.Graph.Providers\Microsoft.Toolkit.Uwp.Graph.csproj", "{6C8D25C9-98D2-47EC-ABD7-FDE54DAC05EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Toolkit.Graph.Providers.Uwp", "Microsoft.Toolkit.Graph.Providers.Uwp\Microsoft.Toolkit.Graph.Providers.Uwp.csproj", "{6C8D25C9-98D2-47EC-ABD7-FDE54DAC05EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

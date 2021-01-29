@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Graph;
-using Microsoft.Toolkit.Graph.Controls.Controls.TaskList;
 using Microsoft.Toolkit.Graph.Providers;
 using Microsoft.Toolkit.Uwp.UI.Extensions;
 using Windows.UI.Core;

@@ -162,9 +162,9 @@
       <Project>{42252ee8-7e68-428f-972b-6d2dd3aa12cc}</Project>
       <Name>Microsoft.Toolkit.Graph.Controls</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Microsoft.Toolkit.Graph.Providers\Microsoft.Toolkit.Uwp.Graph.csproj">
+    <ProjectReference Include="..\Microsoft.Toolkit.Graph.Providers.Uwp\Microsoft.Toolkit.Graph.Providers.Uwp.csproj">
       <Project>{6c8d25c9-98d2-47ec-abd7-fde54dac05eb}</Project>
-      <Name>Microsoft.Toolkit.Uwp.Graph</Name>
+      <Name>Microsoft.Toolkit.Graph.Providers.Uwp</Name>
     </ProjectReference>
     <ProjectReference Include="..\Microsoft.Toolkit.Graph\Microsoft.Toolkit.Graph.csproj">
       <Project>{B2246169-0CD8-473C-AFF6-172310E2C3F6}</Project>

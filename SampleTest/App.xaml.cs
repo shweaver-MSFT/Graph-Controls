@@ -4,7 +4,7 @@
 
 using System;
 using Microsoft.Toolkit.Graph.Providers;
-using Microsoft.Toolkit.Uwp.Graph.Providers;
+using Microsoft.Toolkit.Graph.Providers.Uwp;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
@@ -18,6 +18,10 @@ namespace SampleTest
     /// </summary>
     sealed partial class App : Application
     {
+        private static readonly bool USE_MOCK_PROVIDER = false;
+        private static readonly string CLIENT_ID = "e0d73fca-aefe-41a6-86aa-471bc7cb8128";
+        private static readonly string[] SCOPES = new string[] { "user.read", "tasks.readwrite" };
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -32,24 +36,13 @@ namespace SampleTest
 
         private async void InitGlobalProvider()
         {
-            string clientId = "e0d73fca-aefe-41a6-86aa-471bc7cb8128";
-            string[] scopes = new string[] { "user.read", "tasks.readwrite" };
-            var provider = await WindowsProvider.CreateAsync(clientId, scopes);
-            ProviderManager.Instance.GlobalProvider = provider;
-
-            var graph = provider.Graph;
-            provider.StateChanged += async (s, e) =>
+            if (USE_MOCK_PROVIDER)
             {
-                if (e.NewState == ProviderState.SignedIn)
-                {
-                    var graphResponse = await graph
-                        .Me
-                        .Request()
-                        .GetAsync();
-                    System.Diagnostics.Debug.WriteLine(graphResponse.DisplayName);
-                }
-            };
+                ProviderManager.Instance.GlobalProvider = new MockProvider(true);
+                return;
+            }
 
+            ProviderManager.Instance.GlobalProvider = await WindowsProvider.CreateAsync(CLIENT_ID, SCOPES);
         }
 
         /// <summary>

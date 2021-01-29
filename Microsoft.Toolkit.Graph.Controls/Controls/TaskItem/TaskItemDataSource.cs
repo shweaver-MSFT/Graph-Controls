@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Graph;
 using Microsoft.Toolkit.Graph.Providers;
 
-namespace Microsoft.Toolkit.Graph.Controls.Controls.TaskList
+namespace Microsoft.Toolkit.Graph.Controls
 {
     /// <summary>
     /// The data source handles all service interaction for CRUD operations on Graph Todo Tasks.

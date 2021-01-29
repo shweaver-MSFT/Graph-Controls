@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Graph;
-using Microsoft.Toolkit.Graph.Controls.Controls.TaskList;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
@@ -32,10 +35,10 @@ namespace Microsoft.Toolkit.Graph.Controls
         public string TaskListId { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TaskItemData"/> struct.
+        /// Initializes a new instance of the <see cref="TaskItemData"/> class.
         /// </summary>
-        /// <param name="taskDetails"></param>
-        /// <param name="taskListId"></param>
+        /// <param name="taskDetails">The Graph TodoTask.</param>
+        /// <param name="taskListId">The id of the associated Graph TaskList.</param>
         public TaskItemData(TodoTask taskDetails, string taskListId)
         {
             TaskDetails = taskDetails;
@@ -58,9 +61,9 @@ namespace Microsoft.Toolkit.Graph.Controls
         public bool IsNew => TaskDetails == null || TaskDetails.CreatedDateTime == null;
 
         /// <summary>
-        /// 
+        /// Mark the Graph task as completed.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Success boolean.</returns>
         public async Task<bool> MarkAsCompletedAsync()
         {
             Microsoft.Graph.TaskStatus? previousStatus = TaskDetails.Status;
@@ -82,9 +85,9 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// 
+        /// Unmark the Graph task as completed.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Success boolean.</returns>
         public async Task<bool> UnmarkAsCompletedAsync()
         {
             Microsoft.Graph.TaskStatus? previousStatus = TaskDetails.Status;

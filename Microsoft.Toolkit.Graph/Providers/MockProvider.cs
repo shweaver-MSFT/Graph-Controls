@@ -3,14 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.Graph;
 using Microsoft.Toolkit.Graph.Extensions;
 
@@ -38,24 +32,24 @@ namespace Microsoft.Toolkit.Graph.Providers
                 var current = _state;
                 _state = value;
 
-                StateChanged?.Invoke(this, new StateChangedEventArgs(current, _state));
+                StateChanged?.Invoke(this, new ProviderStateChangedEventArgs(current, _state));
             }
         }
 
         /// <inheritdoc/>
         public GraphServiceClient Graph => new GraphServiceClient(
-                        new DelegateAuthenticationProvider((requestMessage) =>
-                    {
-                        var requestUri = requestMessage.RequestUri.ToString();
+            new DelegateAuthenticationProvider((requestMessage) =>
+            {
+                var requestUri = requestMessage.RequestUri.ToString();
 
-                        // Prepend Proxy Service URI to our request
-                        requestMessage.RequestUri = new Uri(GRAPH_PROXY_URL + Uri.EscapeDataString(requestUri));
+                // Prepend Proxy Service URI to our request
+                requestMessage.RequestUri = new Uri(GRAPH_PROXY_URL + Uri.EscapeDataString(requestUri));
 
-                        return this.AuthenticateRequestAsync(requestMessage);
-                    }));
+                return this.AuthenticateRequestAsync(requestMessage);
+            }));
 
         /// <inheritdoc/>
-        public event EventHandler<StateChangedEventArgs> StateChanged;
+        public event EventHandler<ProviderStateChangedEventArgs> StateChanged;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MockProvider"/> class.
