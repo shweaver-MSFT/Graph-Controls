@@ -4,13 +4,14 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Providers;
 using Windows.Security.Authentication.Web;
 using Windows.Security.Authentication.Web.Core;
 using Windows.UI.ApplicationSettings;
 
 using WebAccount = Windows.Security.Credentials.WebAccount;
 
-namespace Microsoft.Toolkit.Graph.Providers
+namespace Microsoft.Toolkit.Uwp.Graph.Providers
 {
     /// <summary>
     /// A provider for leveraging Windows system authentication.

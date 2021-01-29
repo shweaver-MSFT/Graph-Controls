@@ -53,6 +53,7 @@
                             <!--<RowDefinition Height="Auto" />-->
                         </Grid.RowDefinitions>
 
+                        <!-- Task Status CheckBox -->
                         <CheckBox 
                             Foreground="{TemplateBinding Foreground}"
                             Grid.RowSpan="2"
@@ -60,6 +61,7 @@
                             IsChecked="{Binding IsCompleted, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                             x:Name="PART_TaskStatusCheckBox" />
 
+                        <!-- Task Title TextBlock -->
                         <TextBlock 
                             FontFamily="{TemplateBinding FontFamily}"
                             Foreground="{TemplateBinding Foreground}"
@@ -68,12 +70,15 @@
                             Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}"
                             TextDecorations="{Binding TaskDetails.Status, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TaskStatusToTextDecorationsConverter}}"
                             Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolNegationConverter}}" />
+
+                        <!-- Task Title TextBox-->
                         <TextBox 
                             Grid.Column="1"
                             Text="{Binding TaskTitleInput, RelativeSource={RelativeSource TemplatedParent}}"
                             Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}}"
                             x:Name="PART_TaskTitleInputTextBox" />
 
+                        <!-- Task Metadata -->
                         <!--<TextBlock
                             FontFamily="{TemplateBinding FontFamily}"
                             Foreground="{TemplateBinding Foreground}"

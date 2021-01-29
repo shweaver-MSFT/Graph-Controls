@@ -2,22 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Toolkit.Graph.Providers;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.Toolkit.Graph.Providers;
+using Microsoft.Toolkit.Uwp.Graph.Providers;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace SampleTest
@@ -41,8 +32,9 @@ namespace SampleTest
 
         private async void InitGlobalProvider()
         {
-            var scopes = new string[] { "user.read", "tasks.readwrite" };
-            var provider = await WindowsProvider.CreateAsync("e0d73fca-aefe-41a6-86aa-471bc7cb8128", scopes);
+            string clientId = "e0d73fca-aefe-41a6-86aa-471bc7cb8128";
+            string[] scopes = new string[] { "user.read", "tasks.readwrite" };
+            var provider = await WindowsProvider.CreateAsync(clientId, scopes);
             ProviderManager.Instance.GlobalProvider = provider;
 
             var graph = provider.Graph;

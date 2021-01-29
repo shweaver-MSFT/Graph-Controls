@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>uap10.0.17763</TargetFramework>
-        <Title>Windows Community Toolkit Graph Providers</Title>
+        <Title>Windows Community Toolkit Graph Provider for UWP</Title>
         <PackageId>Microsoft.Toolkit.Graph.Providers</PackageId>
         <Description>
             This library provides Microsoft Graph XAML providers. It is part of the Windows Community Toolkit.
