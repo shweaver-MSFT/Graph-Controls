@@ -25,22 +25,6 @@ namespace SampleTest
         public MainPage()
         {
             this.InitializeComponent();
-
-            var provider = new WindowsProvider("e0d73fca-aefe-41a6-86aa-471bc7cb8128");
-            var graph = provider.Graph;
-            provider.StateChanged += async (s, e) =>
-            {
-                if (e.NewState == ProviderState.SignedIn)
-                {
-                    var graphResponse = await graph
-                        .Me
-                        .Request()
-                        .GetAsync();
-                    System.Diagnostics.Debug.WriteLine(graphResponse.DisplayName);
-                }
-            };
-
-            provider.LoginAsync();
         }
 
         public static string ToLocalTime(DateTimeTimeZone value)

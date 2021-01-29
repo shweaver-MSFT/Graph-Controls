@@ -32,16 +32,15 @@ namespace Microsoft.Toolkit.Graph.Providers
 
         private const string DefaultTenant = "common";
         private const string WebAccountProviderId = "https://login.microsoft.com";
-        //private static readonly string AuthorityBaseFormat = "https://login.microsoftonline.com/{0}";
         private static readonly string[] DefaultScopes = new string[] { "user.read" };
         private static readonly string GraphResourceProperty = "https://graph.microsoft.com";
 
         public static readonly string RedirectUri = string.Format("ms-appx-web://Microsoft.AAD.BrokerPlugIn/{0}", WebAuthenticationBroker.GetCurrentApplicationCallbackUri().Host.ToUpper());
 
+        private AccountsSettingsPane _currentPane;
         private AuthenticatedUser? _currentUser;
         private string[] _scopes;
         private string _clientId;
-        //private string _authority;
 
         /// <summary>
         /// 
@@ -49,21 +48,51 @@ namespace Microsoft.Toolkit.Graph.Providers
         /// <param name="clientId"></param>
         /// <param name="scopes"></param>
         /// <param name="tenant"></param>
-        public WindowsProvider(string clientId, string[] scopes = null, string tenant = DefaultTenant)
+        /// <returns></returns>
+        public static async Task<WindowsProvider> CreateAsync(string clientId, string[] scopes = null)
         {
-            //_authority = string.Format(AuthorityBaseFormat, tenant);
+            var provider = new WindowsProvider(clientId, scopes);
+            await provider.TrySilentSignInAsync();
+            return provider;
+        }
+
+        private WindowsProvider(string clientId, string[] scopes = null)
+        {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            _currentPane = null;
             _currentUser = null;
             _scopes = scopes ?? DefaultScopes;
 
             Graph = new GraphServiceClient(new DelegateAuthenticationProvider(AuthenticateRequestAsync));
 
-            AccountsSettingsPane.GetForCurrentView().AccountCommandsRequested += BuildPaneAsync;
+            State = ProviderState.SignedOut;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public Task<bool> TrySilentSignInAsync()
+        {
+            return Task.FromResult(false);
         }
 
         /// <inheritdoc />
         public override Task LoginAsync()
         {
+            if (State == ProviderState.SignedIn)
+            {
+                return Task.CompletedTask;
+            }
+
+            if (_currentPane != null)
+            {
+                _currentPane.AccountCommandsRequested -= BuildPaneAsync;
+            }
+
+            _currentPane = AccountsSettingsPane.GetForCurrentView();
+            _currentPane.AccountCommandsRequested += BuildPaneAsync;
+
             AccountsSettingsPane.Show();
             return Task.CompletedTask;
         }
@@ -71,6 +100,17 @@ namespace Microsoft.Toolkit.Graph.Providers
         /// <inheritdoc />
         public override Task LogoutAsync()
         {
+            if (State == ProviderState.SignedOut)
+            {
+                return Task.CompletedTask;
+            }
+
+            if (_currentPane != null)
+            {
+                _currentPane.AccountCommandsRequested -= BuildPaneAsync;
+                _currentPane = null;
+            }
+
             _currentUser = null;
             State = ProviderState.SignedOut;
             return Task.CompletedTask;

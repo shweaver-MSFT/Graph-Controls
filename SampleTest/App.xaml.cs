@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Toolkit.Graph.Providers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,6 +35,29 @@ namespace SampleTest
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+
+            InitGlobalProvider();
+        }
+
+        private async void InitGlobalProvider()
+        {
+            var scopes = new string[] { "user.read", "tasks.readwrite" };
+            var provider = await WindowsProvider.CreateAsync("e0d73fca-aefe-41a6-86aa-471bc7cb8128", scopes);
+            ProviderManager.Instance.GlobalProvider = provider;
+
+            var graph = provider.Graph;
+            provider.StateChanged += async (s, e) =>
+            {
+                if (e.NewState == ProviderState.SignedIn)
+                {
+                    var graphResponse = await graph
+                        .Me
+                        .Request()
+                        .GetAsync();
+                    System.Diagnostics.Debug.WriteLine(graphResponse.DisplayName);
+                }
+            };
+
         }
 
         /// <summary>

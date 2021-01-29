@@ -52,6 +52,10 @@ namespace Microsoft.Toolkit.Graph.Providers
             return msal;
         }
 
+        private MsalProvider()
+        {
+        }
+
         /// <inheritdoc/>
         public override async Task AuthenticateRequestAsync(HttpRequestMessage request)
         {

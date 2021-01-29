@@ -11,7 +11,7 @@ namespace Microsoft.Toolkit.Graph.Controls.Controls.TaskList
     /// </summary>
     public class TaskItemDataSource
     {
-        private static readonly bool FakeIt = true;
+        private static readonly bool FakeIt = false;
 
         private static GraphServiceClient Graph => ProviderManager.Instance.GlobalProvider.Graph;
 

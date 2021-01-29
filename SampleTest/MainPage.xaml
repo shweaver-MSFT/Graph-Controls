@@ -23,7 +23,7 @@
     -->
     <Interactivity:Interaction.Behaviors>
         <!--<providers:InteractiveProviderBehavior ClientId="YOUR_CLIENT_ID_HERE" Scopes="User.Read,User.ReadBasic.All,People.Read,Calendars.Read,Mail.Read,Group.Read.All,ChannelMessage.Read.All"/>-->
-        <providers:MockProviderBehavior />
+        <!--<providers:MockProviderBehavior />-->
     </Interactivity:Interaction.Behaviors>
 
     <Pivot>
