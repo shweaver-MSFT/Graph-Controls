@@ -15,7 +15,7 @@ namespace Microsoft.Toolkit.Graph.Controls
     public partial class TaskList : BaseGraphControl
     {
         /// <summary>
-        /// 
+        /// Gets or sets a value indicating whether the main content panel is visible or not.
         /// </summary>
         public bool IsContentCollapsed
         {
@@ -24,7 +24,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// 
+        /// IsContentCollapsed dependency property.
         /// </summary>
         public static readonly DependencyProperty IsContentCollapsedProperty =
             DependencyProperty.Register(nameof(IsContentCollapsed), typeof(bool), typeof(TaskList), new PropertyMetadata(false, OnIsContentCollapsedChanged));
@@ -53,11 +53,12 @@ namespace Microsoft.Toolkit.Graph.Controls
                 var provider = Providers.ProviderManager.Instance.GlobalProvider;
                 if (provider.State == Providers.ProviderState.SignedIn)
                 {
-                    taskList.GoToVisualState(TaskListStates.Normal, true);
-                    return;
+                    taskList.GoToVisualState(TaskListStates.Loaded, true);
                 }
-
-                taskList.GoToVisualState(TaskListStates.Loading, true);
+                else
+                {
+                    taskList.GoToVisualState(TaskListStates.Unloaded, true);
+                }
             }
         }
 
@@ -86,7 +87,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// Todo task lists.
+        /// Todo task lists dependency property.
         /// </summary>
         public static readonly DependencyProperty TaskListsProperty =
             DependencyProperty.Register(nameof(TaskLists), typeof(IList<TodoTaskList>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTaskList>()));
@@ -101,7 +102,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// Todo task lists.
+        /// Selected Todo task list index dependency property.
         /// </summary>
         public static readonly DependencyProperty SelectedTaskListIndexProperty =
             DependencyProperty.Register(nameof(SelectedTaskListIndex), typeof(int), typeof(TaskList), new PropertyMetadata(0, OnSelectedTaskListIndexChanged));
@@ -153,7 +154,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                     return;
                 }
 
-                taskList.GoToVisualState(TaskListStates.Normal, true);
+                taskList.UpdateVisualState();
             }
         }
 

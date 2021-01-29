@@ -198,8 +198,9 @@
                                 </VisualState>
                             </VisualStateGroup>
                             <VisualStateGroup x:Name="CustomStates">
+                                <VisualState x:Name="Unloaded" />
                                 <VisualState x:Name="Loading" />
-                                <VisualState x:Name="Normal">
+                                <VisualState x:Name="Loaded">
                                     <VisualState.Setters>
                                         <Setter Target="TitleTextBlock.Visibility" Value="Collapsed" />
                                         <Setter Target="PART_TaskListsComboBox.Visibility" Value="Visible" />

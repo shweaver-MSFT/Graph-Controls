@@ -35,14 +35,19 @@ namespace Microsoft.Toolkit.Graph.Controls
         protected enum TaskListStates
         {
             /// <summary>
-            /// An indeterminate state while tasks are loading.
+            /// An indeterminate state while the provider is not signed in.
+            /// </summary>
+            Unloaded,
+
+            /// <summary>
+            /// An state to use while data is loading.
             /// </summary>
             Loading,
 
             /// <summary>
             /// The usable state with data available.
             /// </summary>
-            Normal,
+            Loaded,
 
             /// <summary>
             /// A collapsed state where the content is hidden from view.
@@ -60,27 +65,29 @@ namespace Microsoft.Toolkit.Graph.Controls
         private ListView _availableTasksListView;
         private ListView _completedTasksListView;
 
+        private bool _isLoading;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the component is loading.
+        /// </summary>
+        protected bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                UpdateVisualState();
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskList"/> class.
         /// </summary>
         public TaskList()
         {
-            this.DefaultStyleKey = typeof(TaskList);
-
-            ProviderManager.Instance.GlobalProvider.StateChanged += GlobalProvider_StateChanged;
-        }
-
-        private void GlobalProvider_StateChanged(object sender, ProviderStateChangedEventArgs e)
-        {
-            switch (e.NewState)
-            {
-                case ProviderState.Loading:
-                    GoToVisualState(TaskListStates.Loading);
-                    break;
-                case ProviderState.SignedIn:
-                    GoToVisualState(TaskListStates.Normal);
-                    break;
-            }
+            DefaultStyleKey = typeof(TaskList);
+            IsLoading = false;
+            ProviderManager.Instance.GlobalProvider.StateChanged += (s, e) => UpdateVisualState();
         }
 
         /// <inheritdoc/>
@@ -139,16 +146,11 @@ namespace Microsoft.Toolkit.Graph.Controls
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        protected bool IsLoading { get; set; }
-
         /// <inheritdoc/>
         protected override async Task LoadDataAsync()
         {
-            GoToVisualState(TaskListStates.Loading);
             IsLoading = true;
+            UpdateVisualState();
 
             TaskLists = await TaskItemDataSource.GetMyTaskListsAsync();
 
@@ -169,8 +171,8 @@ namespace Microsoft.Toolkit.Graph.Controls
                 TaskListId = SelectedTaskList.Id;
             }
 
-            GoToVisualState(TaskListStates.Normal);
             IsLoading = false;
+            UpdateVisualState();
         }
 
         /// <inheritdoc/>
@@ -187,20 +189,36 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// 
+        /// Update the visual state based upon the current conditions.
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="useTransitions"></param>
-        /// <returns></returns>
-        protected bool GoToVisualState(TaskListStates state, bool useTransitions = false)
+        protected void UpdateVisualState()
         {
-            var success = GoToVisualState(state.ToString(), useTransitions);
-            if (success && IsContentCollapsed && state != TaskListStates.Collapsed)
+            var provider = ProviderManager.Instance.GlobalProvider;
+            if (provider.State == ProviderState.SignedIn)
             {
-                success = GoToVisualState(TaskListStates.Collapsed);
+                if (IsLoading)
+                {
+                    GoToVisualState(TaskListStates.Loading, true);
+                }
+                else
+                {
+                    GoToVisualState(TaskListStates.Loaded, true);
+                }
+            }
+            else
+            {
+                GoToVisualState(TaskListStates.Unloaded, true);
             }
 
-            return success;
+            if (IsContentCollapsed)
+            {
+                GoToVisualState(TaskListStates.Collapsed, true);
+            }
+        }
+
+        private bool GoToVisualState(TaskListStates state, bool useTransitions = false)
+        {
+            return GoToVisualState(state.ToString(), useTransitions);
         }
 
         #region Element event methods
