@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="using:Microsoft.Toolkit.Graph.Controls"
-                    xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters">
+                    xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters"
+                    xmlns:wctconverters="using:Microsoft.Toolkit.Uwp.UI.Converters">
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
@@ -15,6 +16,7 @@
     </ResourceDictionary.ThemeDictionaries>
 
     <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter"/>
+    <wctconverters:BoolNegationConverter x:Key="BoolNegationConverter" />
 
     <DataTemplate x:Key="TaskItemTemplate">
         <local:TaskItem 
@@ -78,7 +80,7 @@
 
                                 <ComboBox 
                                     ItemsSource="{Binding TaskLists, RelativeSource={RelativeSource TemplatedParent}}"
-                                    SelectedIndex="{Binding SelectedTaskListIndex, RelativeSource={RelativeSource TemplatedParent}}"
+                                    SelectedIndex="{Binding SelectedTaskListIndex, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                     Visibility="Collapsed"
                                     x:Name="PART_TaskListsComboBox">
                                     <ComboBox.ItemTemplate>
@@ -113,6 +115,7 @@
                         <!-- Content panel -->
                         <Grid 
                             Grid.Row="1"
+                            Visibility="{Binding IsContentCollapsed, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolNegationConverter}}"
                             x:Name="ContentPanel">
                             <!-- Loading -->
                             <Grid x:Name="LoadingPanel">
@@ -174,12 +177,7 @@
 
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroup x:Name="CommonStates">
-                                <VisualState x:Name="Loading" />
-                                <VisualState x:Name="Collapsed">
-                                    <VisualState.Setters>
-                                        <Setter Target="ContentPanel.Visibility" Value="Collapsed"></Setter>
-                                    </VisualState.Setters>
-                                </VisualState>
+                                <VisualState x:Name="Indeterminate" />
                                 <VisualState x:Name="SignedOut">
                                     <VisualState.Setters>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
@@ -188,9 +186,6 @@
                                 </VisualState>
                                 <VisualState x:Name="SignedIn">
                                     <VisualState.Setters>
-                                        <Setter Target="TitleTextBlock.Visibility" Value="Collapsed"></Setter>
-                                        <Setter Target="PART_AddTaskButton.Visibility" Value="Visible"></Setter>
-                                        <Setter Target="PART_TaskListsComboBox.Visibility" Value="Visible"></Setter>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
                                         <Setter Target="SignedInPanel.Visibility" Value="Visible"></Setter>
                                     </VisualState.Setters>
@@ -199,6 +194,23 @@
                                     <VisualState.Setters>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
                                         <Setter Target="ErrorPanel.Visibility" Value="Visible"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CustomStates">
+                                <VisualState x:Name="Loading" />
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Target="TitleTextBlock.Visibility" Value="Collapsed" />
+                                        <Setter Target="PART_TaskListsComboBox.Visibility" Value="Visible" />
+                                        <Setter Target="PART_AddTaskButton.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Collapsed">
+                                    <VisualState.Setters>
+                                        <Setter Target="TitleTextBlock.Visibility" Value="Visible" />
+                                        <Setter Target="PART_TaskListsComboBox.Visibility" Value="Collapsed" />
+                                        <Setter Target="PART_AddTaskButton.Visibility" Value="Collapsed" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

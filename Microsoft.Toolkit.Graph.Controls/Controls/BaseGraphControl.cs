@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Graph.Providers;
 using Windows.UI.Xaml;
@@ -14,12 +18,12 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// An list of common states that Graph based controls should support at a minimum.
         /// </summary>
-        public enum CommonStates
+        protected enum CommonStates
         {
             /// <summary>
             /// The control is in a indeterminate state
             /// </summary>
-            Loading,
+            Indeterminate,
 
             /// <summary>
             /// The control has Graph context and can behave properly
@@ -60,7 +64,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                GoToVisualState(CommonStates.Loading);
+                GoToVisualState(CommonStates.Indeterminate);
 
                 try
                 {
@@ -83,7 +87,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                             GoToVisualState(CommonStates.SignedOut);
                             break;
                         case ProviderState.Loading:
-                            GoToVisualState(CommonStates.Loading);
+                            GoToVisualState(CommonStates.Indeterminate);
                             break;
                     }
                 }
@@ -133,6 +137,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <returns></returns>
         protected bool GoToVisualState(string state, bool useTransitions = false)
         {
+            System.Diagnostics.Debug.WriteLine(state.ToString());
             return VisualStateManager.GoToState(this, state, useTransitions);
         }
     }

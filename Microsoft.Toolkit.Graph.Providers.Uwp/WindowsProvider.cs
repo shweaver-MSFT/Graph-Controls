@@ -85,11 +85,11 @@ namespace Microsoft.Toolkit.Graph.Providers.Uwp
         /// Attempts to sign in the logged in user automatically.
         /// </summary>
         /// <returns>Success boolean.</returns>
-        public Task<bool> TrySilentSignInAsync()
+        public async Task<bool> TrySilentSignInAsync()
         {
             if (State == ProviderState.SignedIn)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
             State = ProviderState.Loading;
@@ -99,7 +99,7 @@ namespace Microsoft.Toolkit.Graph.Providers.Uwp
             {
                 // There is no credential stored in the locker.
                 State = ProviderState.SignedOut;
-                return Task.FromResult(false);
+                return false;
             }
 
             // Populate the password (aka token).
@@ -108,10 +108,20 @@ namespace Microsoft.Toolkit.Graph.Providers.Uwp
             // Log the user in by storing the credential in memory.
             _currentUser = new AuthenticatedUser(tokenCredential);
 
-            // Update the state to be signed in.
-            State = ProviderState.SignedIn;
+            try
+            {
+                var me = await Graph.Me.Request().GetAsync();
 
-            return Task.FromResult(true);
+                // Update the state to be signed in.
+                State = ProviderState.SignedIn;
+                return true;
+            }
+            catch
+            {
+                // Update the state to be signed in.
+                State = ProviderState.SignedOut;
+                return false;
+            }
         }
 
         /// <inheritdoc />

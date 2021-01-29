@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Graph;
@@ -33,8 +37,28 @@ namespace Microsoft.Toolkit.Graph.Controls
                 };
             }
 
-            ITodoListsCollectionPage taskListsPage = await Graph.Me.Todo.Lists.Request().GetAsync();
-            return taskListsPage.CurrentPage;
+            ITodoListsCollectionPage taskListsCollection = await Graph.Me.Todo.Lists.Request().GetAsync();
+            return taskListsCollection.CurrentPage;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="taskListId"></param>
+        /// <returns></returns>
+        public static async Task<IList<TodoTask>> GetTasksAsync(string taskListId)
+        {
+            if (FakeIt)
+            {
+                return new List<TodoTask>()
+                {
+                    new TodoTask() { Title = "Plant a house." },
+                    new TodoTask() { Title = "Build a tree." },
+                };
+            }
+
+            ITodoTaskListTasksCollectionPage tasksCollection = await Graph.Me.Todo.Lists[taskListId].Tasks.Request().GetAsync();
+            return tasksCollection.CurrentPage;
         }
 
         /// <summary>

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,6 +29,27 @@ namespace Microsoft.Toolkit.Graph.Controls
     [TemplatePart(Name = CompletedTasksListViewPart, Type = typeof(ListView))]
     public partial class TaskList : BaseGraphControl
     {
+        /// <summary>
+        /// Custom visual states for the TaskList control.
+        /// </summary>
+        protected enum TaskListStates
+        {
+            /// <summary>
+            /// An indeterminate state while tasks are loading.
+            /// </summary>
+            Loading,
+
+            /// <summary>
+            /// The usable state with data available.
+            /// </summary>
+            Normal,
+
+            /// <summary>
+            /// A collapsed state where the content is hidden from view.
+            /// </summary>
+            Collapsed,
+        }
+
         private const string AddTaskButtonPart = "PART_AddTaskButton";
         private const string OverflowMenuButtonPart = "PART_OverflowMenuButton";
         private const string AvailableTasksListViewPart = "PART_AvailableTasksListView";
@@ -41,13 +66,27 @@ namespace Microsoft.Toolkit.Graph.Controls
         public TaskList()
         {
             this.DefaultStyleKey = typeof(TaskList);
+
+            ProviderManager.Instance.GlobalProvider.StateChanged += GlobalProvider_StateChanged;
+        }
+
+        private void GlobalProvider_StateChanged(object sender, ProviderStateChangedEventArgs e)
+        {
+            switch (e.NewState)
+            {
+                case ProviderState.Loading:
+                    GoToVisualState(TaskListStates.Loading);
+                    break;
+                case ProviderState.SignedIn:
+                    GoToVisualState(TaskListStates.Normal);
+                    break;
+            }
         }
 
         /// <inheritdoc/>
         protected override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-            GoToVisualState(CommonStates.Loading);
 
             if (_addTaskButton != null)
             {
@@ -100,9 +139,17 @@ namespace Microsoft.Toolkit.Graph.Controls
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        protected bool IsLoading { get; set; }
+
         /// <inheritdoc/>
         protected override async Task LoadDataAsync()
         {
+            GoToVisualState(TaskListStates.Loading);
+            IsLoading = true;
+
             TaskLists = await TaskItemDataSource.GetMyTaskListsAsync();
 
             // Apply the Graph data
@@ -120,26 +167,10 @@ namespace Microsoft.Toolkit.Graph.Controls
 
                 SelectedTaskList = TaskLists[SelectedTaskListIndex];
                 TaskListId = SelectedTaskList.Id;
-
-                var tasks = SelectedTaskList.Tasks;
-                if (tasks != null && tasks.Count() > 0)
-                {
-                    foreach (TodoTask task in tasks)
-                    {
-                        var taskItemData = new TaskItemData(task, TaskListId);
-                        taskItemData.PropertyChanged += this.TaskItemData_PropertyChanged;
-
-                        if (taskItemData.IsCompleted)
-                        {
-                            CompletedTasks.Add(taskItemData);
-                        }
-                        else
-                        {
-                            AvailableTasks.Add(taskItemData);
-                        }
-                    }
-                }
             }
+
+            GoToVisualState(TaskListStates.Normal);
+            IsLoading = false;
         }
 
         /// <inheritdoc/>
@@ -153,6 +184,23 @@ namespace Microsoft.Toolkit.Graph.Controls
                 AvailableTasks.Clear();
                 SelectedTaskListIndex = 0;
             });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="useTransitions"></param>
+        /// <returns></returns>
+        protected bool GoToVisualState(TaskListStates state, bool useTransitions = false)
+        {
+            var success = GoToVisualState(state.ToString(), useTransitions);
+            if (success && IsContentCollapsed && state != TaskListStates.Collapsed)
+            {
+                success = GoToVisualState(TaskListStates.Collapsed);
+            }
+
+            return success;
         }
 
         #region Element event methods

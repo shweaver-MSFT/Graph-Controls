@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.Toolkit.Graph.Providers;
 using Microsoft.Toolkit.Graph.Providers.Uwp;
 using Windows.ApplicationModel;
@@ -30,12 +31,15 @@ namespace SampleTest
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-
-            InitGlobalProvider();
         }
 
-        private async void InitGlobalProvider()
+        private async Task InitGlobalProvider()
         {
+            if (ProviderManager.Instance.GlobalProvider != null)
+            {
+                return;
+            }
+
             if (USE_MOCK_PROVIDER)
             {
                 ProviderManager.Instance.GlobalProvider = new MockProvider(true);
@@ -50,8 +54,10 @@ namespace SampleTest
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
+            await InitGlobalProvider();
+
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,

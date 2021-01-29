@@ -1,8 +1,10 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.Graph;
-using Microsoft.Toolkit.Graph.Providers;
 using Windows.UI.Xaml;
 
 namespace Microsoft.Toolkit.Graph.Controls
@@ -12,6 +14,9 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// </summary>
     public partial class TaskList : BaseGraphControl
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsContentCollapsed
         {
             get { return (bool)GetValue(IsContentCollapsedProperty); }
@@ -25,7 +30,7 @@ namespace Microsoft.Toolkit.Graph.Controls
             DependencyProperty.Register(nameof(IsContentCollapsed), typeof(bool), typeof(TaskList), new PropertyMetadata(false, OnIsContentCollapsedChanged));
 
         /// <summary>
-        /// 
+        /// Handle the toggle of the collapsed state.
         /// </summary>
         /// <param name="d"></param>
         /// <param name="e"></param>
@@ -35,26 +40,24 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 if (taskList.IsContentCollapsed)
                 {
-                    taskList.GoToVisualState("Collapsed", true);
+                    taskList.GoToVisualState(TaskListStates.Collapsed, true);
+                    return;
                 }
-                else
+
+                if (taskList.IsLoading)
                 {
-                    switch (ProviderManager.Instance.GlobalProvider.State)
-                    {
-                        case ProviderState.SignedOut:
-                            taskList.GoToVisualState(CommonStates.SignedOut, true);
-                            break;
-                        case ProviderState.Loading:
-                            taskList.GoToVisualState(CommonStates.Loading, true);
-                            break;
-                        case ProviderState.SignedIn:
-                            taskList.GoToVisualState(CommonStates.SignedIn, true);
-                            break;
-                        default:
-                            taskList.GoToVisualState(CommonStates.Error, true);
-                            break;
-                    }
+                    taskList.GoToVisualState(TaskListStates.Loading, true);
+                    return;
                 }
+
+                var provider = Providers.ProviderManager.Instance.GlobalProvider;
+                if (provider.State == Providers.ProviderState.SignedIn)
+                {
+                    taskList.GoToVisualState(TaskListStates.Normal, true);
+                    return;
+                }
+
+                taskList.GoToVisualState(TaskListStates.Loading, true);
             }
         }
 
@@ -108,12 +111,49 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// </summary>
         /// <param name="d"></param>
         /// <param name="e"></param>
-        private static void OnSelectedTaskListIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static async void OnSelectedTaskListIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is TaskList taskList)
             {
-                taskList.SelectedTaskList = (TodoTaskList)e.NewValue;
-                System.Diagnostics.Debug.WriteLine(taskList.SelectedTaskList.Id);
+                taskList.GoToVisualState(TaskListStates.Loading, true);
+
+                taskList.AvailableTasks.Clear();
+                taskList.CompletedTasks.Clear();
+
+                int taskListIndex = (int)e.NewValue;
+                if (taskListIndex == -1 || taskList.TaskLists.Count == 0 || taskListIndex > taskList.TaskLists.Count)
+                {
+                    return;
+                }
+
+                taskList.SelectedTaskList = taskList.TaskLists[taskListIndex];
+
+                try
+                {
+                    var taskListId = taskList.SelectedTaskList.Id;
+                    var tasks = await TaskItemDataSource.GetTasksAsync(taskListId);
+
+                    foreach (var task in tasks)
+                    {
+                        var taskData = new TaskItemData(task, taskListId);
+                        if (taskData.IsCompleted)
+                        {
+                            taskList.CompletedTasks.Add(taskData);
+                        }
+                        else
+                        {
+                            taskList.AvailableTasks.Add(taskData);
+                        }
+                    }
+                }
+                catch
+                {
+                    // TODO: Handle error to retrieve Tasks
+                    taskList.GoToVisualState(CommonStates.Error, true);
+                    return;
+                }
+
+                taskList.GoToVisualState(TaskListStates.Normal, true);
             }
         }
 
