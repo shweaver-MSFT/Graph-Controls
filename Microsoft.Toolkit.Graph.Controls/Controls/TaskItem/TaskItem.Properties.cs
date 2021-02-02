@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Providers;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -8,8 +9,34 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// <summary>
     /// foo
     /// </summary>
-    public partial class TaskItem
+    public partial class TaskItem : BaseGraphControl
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        protected enum TaskItemStates
+        {
+            Normal,
+            Editing,
+            Completed,
+            Uncompleted,
+        }
+
+        /// <summary>
+        /// Gets or sets the Task id property value.
+        /// </summary>
+        public string TaskId
+        {
+            get { return (string)GetValue(TaskIdProperty); }
+            set { SetValue(TaskIdProperty, value); }
+        }
+
+        /// <summary>
+        /// Todo task id value.
+        /// </summary>
+        public static readonly DependencyProperty TaskIdProperty =
+            DependencyProperty.Register(nameof(TaskId), typeof(string), typeof(TaskItem), new PropertyMetadata(null));
+
         /// <summary>
         /// Gets or sets the TaskList id property value.
         /// </summary>
@@ -27,6 +54,7 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         // <summary>
         /// Gets or sets the TaskList id property value.
+        /// TODO: Does this really need to be a property?
         /// </summary>
         public string TaskTitleInput
         {
@@ -41,7 +69,8 @@ namespace Microsoft.Toolkit.Graph.Controls
             DependencyProperty.Register(nameof(TaskTitleInput), typeof(string), typeof(TaskItem), new PropertyMetadata(null));
 
         // <summary>
-        /// Gets or sets the TaskList id property value.
+        /// Gets or sets the Task title property value.
+        /// TODO: Does this really need to be a property?
         /// </summary>
         public string TaskTitle
         {
@@ -50,7 +79,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// Todo task title input value.
+        /// Todo task title value.
         /// </summary>
         public static readonly DependencyProperty TaskTitleProperty =
             DependencyProperty.Register(nameof(TaskTitle), typeof(string), typeof(TaskItem), new PropertyMetadata(null));
@@ -76,6 +105,8 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 taskItem.IsCompleted = taskItem.TaskDetails?.Status == TaskStatus.Completed;
                 taskItem.TaskTitle = taskItem.TaskDetails?.Title;
+
+                taskItem.UpdateVisualState();
             }
         }
 
@@ -102,21 +133,21 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 var taskData = new TaskItemData(taskItem.TaskDetails, taskItem.TaskListId);
 
-                // Don't change status for new tasks
-                if (taskData.IsNew)
+                // Don't change status for new tasks, or ones that are already completed.
+                if (!taskData.IsNew && taskData.IsCompleted != (bool)e.NewValue)
                 {
-                    return;
+                    // Toggle the status as appropriate
+                    if (taskData.IsCompleted)
+                    {
+                        await taskData.UnmarkAsCompletedAsync();
+                    }
+                    else
+                    {
+                        await taskData.MarkAsCompletedAsync();
+                    }
                 }
 
-                // Toggle the status as appropriate
-                if (taskData.IsCompleted)
-                {
-                    await taskData.MarkAsCompletedAsync();
-                }
-                else
-                {
-                    await taskData.UnmarkAsCompletedAsync();
-                }
+                taskItem.UpdateVisualState();
             }
         }
 
@@ -151,6 +182,40 @@ namespace Microsoft.Toolkit.Graph.Controls
                         taskItem.TaskTitleInput = string.Empty;
                         taskItem.Focus(FocusState.Programmatic);
                     }
+
+                    taskItem.UpdateVisualState();
+                }
+            });
+        }
+
+        private bool GoToVisualState(TaskItemStates state, bool useTransitions = false)
+        {
+            return GoToVisualState(state.ToString(), useTransitions);
+        }
+
+        /// <summary>
+        /// Update the visual state based upon the current conditions.
+        /// </summary>
+        private async void UpdateVisualState()
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (IsEditModeEnabled)
+                {
+                    GoToVisualState(TaskItemStates.Editing);
+                }
+                else
+                {
+                    GoToVisualState(TaskItemStates.Normal);
+                }
+
+                if (IsCompleted)
+                {
+                    GoToVisualState(TaskItemStates.Completed);
+                }
+                else
+                {
+                    GoToVisualState(TaskItemStates.Uncompleted);
                 }
             });
         }

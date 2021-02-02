@@ -19,8 +19,6 @@
     </ResourceDictionary.ThemeDictionaries>
 
     <wctconverters:BoolNegationConverter x:Key="BoolNegationConverter" />
-    <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter" />
-    <converters:TaskStatusToTextDecorationsConverter x:Key="TaskStatusToTextDecorationsConverter" />
 
     <Style TargetType="local:TaskItem">
         <Setter Property="Background" Value="{ThemeResource TaskItemBackground}" />
@@ -68,14 +66,13 @@
                             Grid.Column="1"
                             VerticalAlignment="Center"
                             Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}"
-                            TextDecorations="{Binding TaskDetails.Status, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource TaskStatusToTextDecorationsConverter}}"
-                            Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolNegationConverter}}" />
+                            x:Name="PART_TaskTitleTextBlock"/>
 
                         <!-- Task Title TextBox-->
                         <TextBox 
                             Grid.Column="1"
                             Text="{Binding TaskTitleInput, RelativeSource={RelativeSource TemplatedParent}}"
-                            Visibility="{Binding IsEditModeEnabled, RelativeSource={RelativeSource TemplatedParent}}"
+                            Visibility="Collapsed"
                             x:Name="PART_TaskTitleInputTextBox" />
 
                         <!-- Task Metadata -->
@@ -85,6 +82,35 @@
                             Grid.Column="1"
                             Grid.Row="1"
                             Text="25 min" />-->
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Indeterminate" />
+                                <VisualState x:Name="SignedOut" />
+                                <VisualState x:Name="SignedIn" />
+                                <VisualState x:Name="Error" />
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="EditStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="Editing">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_TaskTitleTextBlock.Visibility" Value="Collapsed"></Setter>
+                                        <Setter Target="PART_TaskTitleInputTextBox.Visibility" Value="Visible"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CompletionStates">
+                                <VisualState x:Name="Uncompleted">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="None"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Completed">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="Strikethrough"></Setter>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

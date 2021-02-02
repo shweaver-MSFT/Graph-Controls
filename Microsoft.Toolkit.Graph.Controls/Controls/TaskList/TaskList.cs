@@ -149,8 +149,12 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc/>
         protected override async Task LoadDataAsync()
         {
+            if (IsLoading)
+            {
+                return;
+            }
+
             IsLoading = true;
-            UpdateVisualState();
 
             TaskLists = await TaskItemDataSource.GetMyTaskListsAsync();
 

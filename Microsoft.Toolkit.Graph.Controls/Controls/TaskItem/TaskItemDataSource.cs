@@ -64,6 +64,23 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="taskListId"></param>
+        /// <param name="taskId"></param>
+        /// <returns></returns>
+        public static async Task<TodoTask> GetTaskAsync(string taskListId, string taskId)
+        {
+            if (FakeIt)
+            {
+                return new TodoTask() { Title = "Plant a house." };
+            }
+
+            TodoTask task = await Graph.Me.Todo.Lists[taskListId].Tasks[taskId].Request().GetAsync();
+            return task;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="taskId"></param>
         /// <param name="taskListId"></param>
         /// <returns></returns>

@@ -192,6 +192,7 @@
                                 </VisualState>
                                 <VisualState x:Name="Error">
                                     <VisualState.Setters>
+                                        <Setter Target="ContentPanel.Background" Value="Red"></Setter>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
                                         <Setter Target="ErrorPanel.Visibility" Value="Visible"></Setter>
                                     </VisualState.Setters>

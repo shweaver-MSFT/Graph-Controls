@@ -4,6 +4,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Toolkit.Graph.Providers;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -24,6 +25,22 @@ namespace Microsoft.Toolkit.Graph.Controls
         private TextBox _taskTitleInputTextBox;
         private CheckBox _taskStatusCheckBox;
 
+        private bool _isLoading;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the component is loading.
+        /// </summary>
+        protected bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                UpdateVisualState();
+            }
+        }
+
+        /*
         /// <summary>
         /// 
         /// </summary>
@@ -38,6 +55,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// 
         /// </summary>
         public event RoutedEventHandler Unchecked;
+        */
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskItem"/> class.
@@ -45,6 +63,8 @@ namespace Microsoft.Toolkit.Graph.Controls
         public TaskItem()
         {
             this.DefaultStyleKey = typeof(TaskItem);
+            IsLoading = false;
+            ProviderManager.Instance.GlobalProvider.StateChanged += (s, e) => UpdateVisualState();
         }
 
         /// <summary>
@@ -86,18 +106,18 @@ namespace Microsoft.Toolkit.Graph.Controls
         private void TaskStatusCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             // TODO: Save 
-            Checked?.Invoke(this, e);
+            //Checked?.Invoke(this, e);
         }
 
         private void TaskStatusCheckBox_Indeterminate(object sender, RoutedEventArgs e)
         {
-            Indeterminate?.Invoke(this, e);
+            //Indeterminate?.Invoke(this, e);
         }
 
         private void TaskStatusCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
 
-            Unchecked?.Invoke(this, e);
+            //Unchecked?.Invoke(this, e);
         }
 
         private async void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
@@ -109,9 +129,21 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <inheritdoc/>
-        protected override Task LoadDataAsync()
+        protected override async Task LoadDataAsync()
         {
-            return Task.CompletedTask;
+            if (IsLoading)
+            {
+                return;
+            }
+
+            IsLoading = true;
+
+            if (TaskDetails == null && TaskListId != null && TaskId != null)
+            {
+                TaskDetails = await TaskItemDataSource.GetTaskAsync(TaskListId, TaskId);
+            }
+
+            IsLoading = false;
         }
 
         /// <inheritdoc/>

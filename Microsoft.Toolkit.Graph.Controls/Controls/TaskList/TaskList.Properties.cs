@@ -38,27 +38,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             if (d is TaskList taskList)
             {
-                if (taskList.IsContentCollapsed)
-                {
-                    taskList.GoToVisualState(TaskListStates.Collapsed, true);
-                    return;
-                }
-
-                if (taskList.IsLoading)
-                {
-                    taskList.GoToVisualState(TaskListStates.Loading, true);
-                    return;
-                }
-
-                var provider = Providers.ProviderManager.Instance.GlobalProvider;
-                if (provider.State == Providers.ProviderState.SignedIn)
-                {
-                    taskList.GoToVisualState(TaskListStates.Loaded, true);
-                }
-                else
-                {
-                    taskList.GoToVisualState(TaskListStates.Unloaded, true);
-                }
+                taskList.UpdateVisualState();
             }
         }
 
@@ -116,7 +96,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             if (d is TaskList taskList)
             {
-                taskList.GoToVisualState(TaskListStates.Loading, true);
+                taskList.IsLoading = true;
 
                 taskList.AvailableTasks.Clear();
                 taskList.CompletedTasks.Clear();
@@ -124,6 +104,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                 int taskListIndex = (int)e.NewValue;
                 if (taskListIndex == -1 || taskList.TaskLists.Count == 0 || taskListIndex > taskList.TaskLists.Count)
                 {
+                    taskList.IsLoading = false;
                     return;
                 }
 
@@ -154,7 +135,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                     return;
                 }
 
-                taskList.UpdateVisualState();
+                taskList.IsLoading = false;
             }
         }
 
