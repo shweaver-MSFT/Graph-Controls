@@ -129,26 +129,30 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private static async void OnIsCompletedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TaskItem taskItem)
+            await d.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                var taskData = new TaskItemData(taskItem.TaskDetails, taskItem.TaskListId);
-
-                // Don't change status for new tasks, or ones that are already completed.
-                if (!taskData.IsNew && taskData.IsCompleted != (bool)e.NewValue)
+                if (d is TaskItem taskItem)
                 {
-                    // Toggle the status as appropriate
-                    if (taskData.IsCompleted)
-                    {
-                        await taskData.UnmarkAsCompletedAsync();
-                    }
-                    else
-                    {
-                        await taskData.MarkAsCompletedAsync();
-                    }
-                }
+                    var taskData = new TaskItemData(taskItem.TaskDetails, taskItem.TaskListId);
 
-                taskItem.UpdateVisualState();
-            }
+                    // Don't change status for new tasks, or ones that are already completed.
+                    if (!taskData.IsNew && taskData.IsCompleted != (bool)e.NewValue)
+                    {
+
+                        // Toggle the status as appropriate
+                        bool success = taskData.IsCompleted
+                            ? await taskData.UnmarkAsCompletedAsync()
+                            : await taskData.MarkAsCompletedAsync();
+
+                        if (!success)
+                        {
+                            taskItem.IsCompleted = (bool)e.OldValue;
+                        }
+                    }
+
+                    taskItem.UpdateVisualState();
+                }
+            });
         }
 
         /// <summary>

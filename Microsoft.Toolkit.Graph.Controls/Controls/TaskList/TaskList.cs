@@ -350,9 +350,10 @@ namespace Microsoft.Toolkit.Graph.Controls
                     // Delete task from Graph.
                     await TaskItemDataSource.DeleteTaskAsync(taskData.TaskId, taskData.TaskListId);
                 }
-                catch
+                catch (Exception e)
                 {
                     // TODO: Handle failure to delete the task.
+                    System.Diagnostics.Debug.WriteLine(e.Message);
                     return;
                 }
             }

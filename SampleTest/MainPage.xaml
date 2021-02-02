@@ -30,7 +30,12 @@
         </PivotItem>
         <PivotItem Header="Todo Tasks">
             <StackPanel>
-                <!-- <wgt:TaskItem></wgt:TaskItem>-->
+                <wgt:TaskItem
+                    Background="AntiqueWhite"
+                    BorderBrush="Green"
+                    BorderThickness="2"
+                    TaskId="AQMkADAwATM3ZmYAZS1iYTljLTc4NDgtMDACLTAwCgBGAAAD381MccKA0UeLdgJgfAPG7wcA23BKzyrCrkOBGkCKS-lMOQAAAgESAAAA23BKzyrCrkOBGkCKS-lMOQAEEOevjQAAAA=="
+                    TaskListId="AQMkADAwATM3ZmYAZS1iYTljLTc4NDgtMDACLTAwCgAuAAAD381MccKA0UeLdgJgfAPG7wEA23BKzyrCrkOBGkCKS-lMOQAAAgESAAAA"></wgt:TaskItem>
                 <wgt:TaskList
                     Margin="20"
                     BorderBrush="Black"

@@ -1,8 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="using:Microsoft.Toolkit.Graph.Controls"
-                    xmlns:converters="using:Microsoft.Toolkit.Graph.Controls.Converters"
-                    xmlns:wctconverters="using:Microsoft.Toolkit.Uwp.UI.Converters">
+                    xmlns:converters="using:Microsoft.Toolkit.Uwp.UI.Converters">
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
@@ -18,7 +17,7 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <wctconverters:BoolNegationConverter x:Key="BoolNegationConverter" />
+    <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
 
     <Style TargetType="local:TaskItem">
         <Setter Property="Background" Value="{ThemeResource TaskItemBackground}" />

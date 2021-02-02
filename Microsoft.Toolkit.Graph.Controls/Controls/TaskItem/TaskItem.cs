@@ -138,7 +138,7 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             IsLoading = true;
 
-            if (TaskDetails == null && TaskListId != null && TaskId != null)
+            if (TaskDetails == null && !string.IsNullOrWhiteSpace(TaskListId) && !string.IsNullOrWhiteSpace(TaskId))
             {
                 TaskDetails = await TaskItemDataSource.GetTaskAsync(TaskListId, TaskId);
             }
@@ -178,6 +178,7 @@ namespace Microsoft.Toolkit.Graph.Controls
             catch (Exception e)
             {
                 // TODO: Handle failure to save modified task details
+                System.Diagnostics.Debug.WriteLine(e.Message);
                 return false;
             }
 
