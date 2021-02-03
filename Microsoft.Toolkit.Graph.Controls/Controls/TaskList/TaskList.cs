@@ -195,8 +195,8 @@ namespace Microsoft.Toolkit.Graph.Controls
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 TaskLists = new ObservableCollection<TodoTaskList>();
-                CompletedTasks = new ObservableCollection<TodoTask>();
-                AvailableTasks = new ObservableCollection<TodoTask>();
+                CompletedTasks = new ObservableCollection<TaskDataModel>();
+                AvailableTasks = new ObservableCollection<TaskDataModel>();
                 SelectedTaskList = null;
                 SelectedTaskListIndex = 0;
             });
@@ -239,16 +239,16 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (_availableTasksListView != null &&
-                    _availableTasksListView.Items.Count > 0 &&
-                    _availableTasksListView.Items[0] is TodoTask task &&
-                    task.IsNew())
+                if (AvailableTasks != null &&
+                    AvailableTasks.Count > 0 &&
+                    AvailableTasks.First() is TaskDataModel taskModel &&
+                    taskModel.Task.IsNew())
                 {
                     // A new item is already ready for input.
                     return;
                 }
 
-                AvailableTasks.Insert(0, new TodoTask());
+                AvailableTasks.Insert(0, new TaskDataModel(SelectedTaskList.Id, new TodoTask()));
             });
         }
 
@@ -304,13 +304,15 @@ namespace Microsoft.Toolkit.Graph.Controls
 
                 foreach (var task in tasks)
                 {
+                    var taskModel = new TaskDataModel(taskListId, task);
+
                     if (task.IsCompleted())
                     {
-                        CompletedTasks.Add(task);
+                        CompletedTasks.Add(taskModel);
                     }
                     else
                     {
-                        AvailableTasks.Add(task);
+                        AvailableTasks.Add(taskModel);
                     }
                 }
             }

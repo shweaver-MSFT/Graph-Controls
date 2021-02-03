@@ -112,9 +112,9 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public IList<TodoTask> AvailableTasks
+        public IList<TaskDataModel> AvailableTasks
         {
-            get { return (IList<TodoTask>)GetValue(AvailableTasksProperty); }
+            get { return (IList<TaskDataModel>)GetValue(AvailableTasksProperty); }
             set { SetValue(AvailableTasksProperty, value); }
         }
 
@@ -122,14 +122,14 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty AvailableTasksProperty =
-            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
+            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TaskDataModel>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TaskDataModel>()));
 
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public IList<TodoTask> CompletedTasks
+        public IList<TaskDataModel> CompletedTasks
         {
-            get { return (IList<TodoTask>)GetValue(CompletedTasksProperty); }
+            get { return (IList<TaskDataModel>)GetValue(CompletedTasksProperty); }
             set { SetValue(CompletedTasksProperty, value); }
         }
 
@@ -137,6 +137,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty CompletedTasksProperty =
-            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
+            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TaskDataModel>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TaskDataModel>()));
     }
 }

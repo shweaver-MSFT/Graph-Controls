@@ -257,21 +257,27 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             IsLoading = true;
 
-            var taskDetailsForSave = new TodoTask()
-            {
-                Id = TaskDetails.Id,
-                Title = inputText.Trim(),
-            };
-
             try
             {
                 if (TaskDetails.IsNew())
                 {
-                    TaskDetails = await TodoTaskDataSource.AddTaskAsync(TaskListId, taskDetailsForSave);
+                    // Workaround with empty ODataType is required or the call will fail
+                    // https://github.com/microsoftgraph/msgraph-beta-sdk-dotnet/issues/87
+                    var newTask = new TodoTask()
+                    {
+                        ODataType = null,
+                        Title = inputText.Trim(),
+                    };
+                    TaskDetails = await TodoTaskDataSource.AddTaskAsync(TaskListId, newTask);
                 }
                 else
                 {
-                    var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(TaskListId, taskDetailsForSave);
+                    var updatedTask = new TodoTask()
+                    {
+                        Id = TaskDetails.Id,
+                        Title = inputText.Trim(),
+                    };
+                    updatedTask = await TodoTaskDataSource.UpdateTaskAsync(TaskListId, updatedTask);
                     TaskDetails.Title = updatedTask.Title;
                 }
 

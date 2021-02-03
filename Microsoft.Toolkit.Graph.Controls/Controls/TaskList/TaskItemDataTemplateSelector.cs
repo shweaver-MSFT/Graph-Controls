@@ -24,7 +24,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc />
         protected override DataTemplate SelectTemplateCore(object item)
         {
-            if (item is TodoTask task && task.IsNew())
+            if (item is TaskDataModel taskModel && taskModel.Task.IsNew())
             {
                 return NewTask;
             }
