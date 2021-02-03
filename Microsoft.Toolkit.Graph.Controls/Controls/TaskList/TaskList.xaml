@@ -15,19 +15,19 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <converters:TaskStatusToBoolConverter x:Key="TaskStatusToBoolConverter"/>
     <wctconverters:BoolNegationConverter x:Key="BoolNegationConverter" />
 
     <DataTemplate x:Key="TaskItemTemplate">
-        <local:TaskItem 
-            TaskDetails="{Binding TaskDetails}"
+        <local:TaskItem
+            Background="Blue"
+            TaskDetails="{Binding}"
             TaskListId="{Binding TaskListId}" />
     </DataTemplate>
 
     <DataTemplate x:Key="NewTaskItemTemplate">
         <local:TaskItem 
             IsEditModeEnabled="True"
-            TaskDetails="{Binding TaskDetails}"
+            TaskDetails="{Binding}"
             TaskListId="{Binding TaskListId}" />
     </DataTemplate>
 
@@ -52,7 +52,8 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
-                        Margin="{TemplateBinding Margin}">
+                        Margin="{TemplateBinding Margin}"
+                        x:Name="PART_RootPanel">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -124,8 +125,8 @@
 
                             <!-- Error -->
                             <Grid
-                            Visibility="Collapsed"
-                            x:Name="ErrorPanel">
+                                Visibility="Collapsed"
+                                x:Name="ErrorPanel">
                                 <TextBlock Text="Error" />
                             </Grid>
 
@@ -176,7 +177,7 @@
                         </Grid>
 
                         <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="CommonStates">
+                            <VisualStateGroup x:Name="LoginStates">
                                 <VisualState x:Name="Indeterminate" />
                                 <VisualState x:Name="SignedOut">
                                     <VisualState.Setters>
@@ -192,13 +193,13 @@
                                 </VisualState>
                                 <VisualState x:Name="Error">
                                     <VisualState.Setters>
-                                        <Setter Target="ContentPanel.Background" Value="Red"></Setter>
+                                        <Setter Target="PART_RootPanel.Background" Value="Red"></Setter>
                                         <Setter Target="LoadingPanel.Visibility" Value="Collapsed"></Setter>
                                         <Setter Target="ErrorPanel.Visibility" Value="Visible"></Setter>
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
-                            <VisualStateGroup x:Name="CustomStates">
+                            <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Unloaded" />
                                 <VisualState x:Name="Loading" />
                                 <VisualState x:Name="Loaded">

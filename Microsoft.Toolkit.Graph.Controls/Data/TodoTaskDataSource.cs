@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using Microsoft.Graph;
 using Microsoft.Toolkit.Graph.Providers;
 
-namespace Microsoft.Toolkit.Graph.Controls
+namespace Microsoft.Toolkit.Graph.Controls.Data
 {
     /// <summary>
     /// The data source handles all service interaction for CRUD operations on Graph Todo Tasks.
     /// </summary>
-    public class TaskItemDataSource
+    public class TodoTaskDataSource
     {
         private static readonly bool FakeIt = false;
 

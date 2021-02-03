@@ -1,7 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="using:Microsoft.Toolkit.Graph.Controls"
-                    xmlns:converters="using:Microsoft.Toolkit.Uwp.UI.Converters">
+                    xmlns:local="using:Microsoft.Toolkit.Graph.Controls">
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
@@ -16,8 +15,6 @@
             <Thickness x:Key="TaskItemPadding">0</Thickness>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
-
-    <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
 
     <Style TargetType="local:TaskItem">
         <Setter Property="Background" Value="{ThemeResource TaskItemBackground}" />
@@ -39,73 +36,144 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Margin="{TemplateBinding Margin}"
-                        Padding="{TemplateBinding Padding}">
+                        Padding="{TemplateBinding Padding}"
+                        x:Name="PART_RootPanel">
 
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <!--<RowDefinition Height="Auto" />-->
-                        </Grid.RowDefinitions>
+                        <!-- Error -->
+                        <Grid x:Name="PART_ErrorPanel" Visibility="Collapsed">
+                            <TextBlock Text="Error" />
+                        </Grid>
 
-                        <!-- Task Status CheckBox -->
-                        <CheckBox 
-                            Foreground="{TemplateBinding Foreground}"
-                            Grid.RowSpan="2"
-                            MinWidth="0"
-                            IsChecked="{Binding IsCompleted, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                            x:Name="PART_TaskStatusCheckBox" />
+                        <!-- Signed out -->
+                        <Grid x:Name="PART_SignedOutPanel" Visibility="Collapsed">
+                            <TextBlock
+                                Grid.Row="1"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                TextWrapping="WrapWholeWords">
+                                <TextBlock.Text>
+                                    Sign in with your Microsoft Account to create tasks
+                                    and pick a task for a focus session. You tasks will
+                                    be synced with Microsoft To Do.
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Grid>
 
-                        <!-- Task Title TextBlock -->
-                        <TextBlock 
-                            FontFamily="{TemplateBinding FontFamily}"
-                            Foreground="{TemplateBinding Foreground}"
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}"
-                            x:Name="PART_TaskTitleTextBlock"/>
+                        <!-- Signed in -->
+                        <Grid x:Name="PART_SignedInPanel" Visibility="Collapsed">
 
-                        <!-- Task Title TextBox-->
-                        <TextBox 
-                            Grid.Column="1"
-                            Text="{Binding TaskTitleInput, RelativeSource={RelativeSource TemplatedParent}}"
-                            Visibility="Collapsed"
-                            x:Name="PART_TaskTitleInputTextBox" />
+                            <!-- Loading -->
+                            <Grid x:Name="PART_LoadingPanel" Visibility="Collapsed">
+                                <TextBlock Text="Loading..." />
+                            </Grid>
 
-                        <!-- Task Metadata -->
-                        <!--<TextBlock
-                            FontFamily="{TemplateBinding FontFamily}"
-                            Foreground="{TemplateBinding Foreground}"
-                            Grid.Column="1"
-                            Grid.Row="1"
-                            Text="25 min" />-->
+                            <!-- Content -->
+                            <Grid x:Name="PART_ContentPanel" Visibility="Collapsed">
+                                <Grid x:Name="PART_NormalPanel">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <!--<RowDefinition Height="Auto" />-->
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Task Status CheckBox -->
+                                    <CheckBox 
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Grid.RowSpan="2"
+                                        MinWidth="0"
+                                        IsChecked="{Binding IsCompleted, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        x:Name="PART_TaskStatusCheckBox" />
+
+                                    <!-- Task Title TextBlock -->
+                                    <TextBlock 
+                                        FontFamily="{TemplateBinding FontFamily}"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}"
+                                        x:Name="PART_TaskTitleTextBlock" />
+
+                                    <!-- Task Metadata -->
+                                    <!--<TextBlock
+                                        FontFamily="{TemplateBinding FontFamily}"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        Grid.Column="1"
+                                        Grid.Row="1"
+                                        Text="25 min" />-->
+                                </Grid>
+
+                                <!-- Edit mode content -->
+                                <Grid x:Name="PART_EditPanel" Visibility="Collapsed">
+                                    <!-- Task Title TextBox-->
+                                    <TextBox x:Name="PART_TaskTitleInputTextBox" />
+                                </Grid>
+                            </Grid>
+
+                            <!-- Deleted -->
+                            <Grid x:Name="PART_DeletedPanel" Visibility="Collapsed">
+                                <TextBlock Text="Deleted." />
+                            </Grid>
+                        </Grid>
+
                         <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="CommonStates">
+                            <VisualStateGroup x:Name="LoginStates">
+                                <!-- Nothing is visible when the visual state is "Indeterminate" -->
                                 <VisualState x:Name="Indeterminate" />
-                                <VisualState x:Name="SignedOut" />
-                                <VisualState x:Name="SignedIn" />
-                                <VisualState x:Name="Error" />
+                                <VisualState x:Name="SignedOut">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_SignedOutPanel.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="SignedIn">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_SignedInPanel.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Error">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_ErrorPanel.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
                             </VisualStateGroup>
-                            <VisualStateGroup x:Name="EditStates">
+                            <VisualStateGroup x:Name="LoadingStates">
+                                <VisualState x:Name="Unloaded" />
+                                <VisualState x:Name="Deleted">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_DeletedPanel.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Loading">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_LoadingPanel.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Loaded">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_ContentPanel.Visibility" Value="Visible" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="Editing">
                                     <VisualState.Setters>
-                                        <Setter Target="PART_TaskTitleTextBlock.Visibility" Value="Collapsed"></Setter>
-                                        <Setter Target="PART_TaskTitleInputTextBox.Visibility" Value="Visible"></Setter>
+                                        <Setter Target="PART_NormalPanel.Visibility" Value="Collapsed" />
+                                        <Setter Target="PART_EditPanel.Visibility" Value="Visible" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
                             <VisualStateGroup x:Name="CompletionStates">
                                 <VisualState x:Name="Uncompleted">
                                     <VisualState.Setters>
-                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="None"></Setter>
+                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="None" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Completed">
                                     <VisualState.Setters>
-                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="Strikethrough"></Setter>
+                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="Strikethrough" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

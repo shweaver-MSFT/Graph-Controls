@@ -1,27 +1,21 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using Microsoft.Graph;
-using Microsoft.Toolkit.Graph.Providers;
+using Microsoft.Toolkit.Graph.Controls.Data;
+using Microsoft.Toolkit.Graph.Controls.Extensions;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
 namespace Microsoft.Toolkit.Graph.Controls
 {
     /// <summary>
-    /// foo
+    /// Visual representation of a single To Do task.
     /// </summary>
     public partial class TaskItem : BaseGraphControl
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        protected enum TaskItemStates
-        {
-            Normal,
-            Editing,
-            Completed,
-            Uncompleted,
-        }
-
         /// <summary>
         /// Gets or sets the Task id property value.
         /// </summary>
@@ -52,25 +46,8 @@ namespace Microsoft.Toolkit.Graph.Controls
         public static readonly DependencyProperty TaskListIdProperty =
             DependencyProperty.Register(nameof(TaskListId), typeof(string), typeof(TaskItem), new PropertyMetadata(null));
 
-        // <summary>
-        /// Gets or sets the TaskList id property value.
-        /// TODO: Does this really need to be a property?
-        /// </summary>
-        public string TaskTitleInput
-        {
-            get { return (string)GetValue(TaskTitleInputProperty); }
-            set { SetValue(TaskTitleInputProperty, value); }
-        }
-
         /// <summary>
-        /// Todo task title input value.
-        /// </summary>
-        public static readonly DependencyProperty TaskTitleInputProperty =
-            DependencyProperty.Register(nameof(TaskTitleInput), typeof(string), typeof(TaskItem), new PropertyMetadata(null));
-
-        // <summary>
         /// Gets or sets the Task title property value.
-        /// TODO: Does this really need to be a property?
         /// </summary>
         public string TaskTitle
         {
@@ -103,17 +80,25 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             if (sender is TaskItem taskItem)
             {
-                taskItem.IsCompleted = taskItem.TaskDetails?.Status == TaskStatus.Completed;
-                taskItem.TaskTitle = taskItem.TaskDetails?.Title;
+                var newTaskDetails = (TodoTask)e.NewValue;
+                if (newTaskDetails == null)
+                {
+                    taskItem.IsCompleted = false;
+                    taskItem.IsEditModeEnabled = false;
+                    taskItem.TaskTitle = null;
+                }
+                else
+                {
+                    taskItem.IsCompleted = taskItem.TaskDetails.IsCompleted();
+                    taskItem.TaskTitle = taskItem.TaskDetails.Title;
+                }
 
                 taskItem.UpdateVisualState();
             }
         }
 
-        public bool IsNew => TaskDetails.CreatedDateTime == null;
-
         /// <summary>
-        /// 
+        /// Gets or sets a value indicating whether the task status is completed.
         /// </summary>
         public bool IsCompleted
         {
@@ -122,7 +107,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         }
 
         /// <summary>
-        /// 
+        /// IsCompleted property.
         /// </summary>
         public static readonly DependencyProperty IsCompletedProperty =
             DependencyProperty.Register(nameof(IsCompleted), typeof(bool), typeof(TaskItem), new PropertyMetadata(false, OnIsCompletedChanged));
@@ -133,24 +118,46 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 if (d is TaskItem taskItem)
                 {
-                    var taskData = new TaskItemData(taskItem.TaskDetails, taskItem.TaskListId);
-
-                    // Don't change status for new tasks, or ones that are already completed.
-                    if (!taskData.IsNew && taskData.IsCompleted != (bool)e.NewValue)
+                    var task = taskItem.TaskDetails;
+                    if (task == null)
                     {
+                        return;
+                    }
 
-                        // Toggle the status as appropriate
-                        bool success = taskData.IsCompleted
-                            ? await taskData.UnmarkAsCompletedAsync()
-                            : await taskData.MarkAsCompletedAsync();
+                    taskItem.IsLoading = true;
 
-                        if (!success)
+                    var newIsCompleted = (bool)e.NewValue;
+                    if (!task.IsNew() && task.IsCompleted() != newIsCompleted)
+                    {
+                        var newStatus = newIsCompleted ? TaskStatus.Completed : TaskStatus.NotStarted;
+                        var taskForUpdate = new TodoTask()
                         {
+                            Id = task.Id,
+                            Status = newStatus,
+                        };
+
+                        try
+                        {
+                            var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(taskItem.TaskListId, taskForUpdate);
+                            taskItem.TaskDetails = updatedTask;
+
+                            if (newIsCompleted)
+                            {
+                                taskItem.FireTaskCompletedEvent();
+                            }
+                            else
+                            {
+                                taskItem.FireTaskUncompletedEvent();
+                            }
+                        }
+                        catch
+                        {
+                            // Restore previous value if not successful.
                             taskItem.IsCompleted = (bool)e.OldValue;
                         }
                     }
 
-                    taskItem.UpdateVisualState();
+                    taskItem.IsLoading = false;
                 }
             });
         }
@@ -178,48 +185,16 @@ namespace Microsoft.Toolkit.Graph.Controls
                 {
                     if (taskItem.IsEditModeEnabled)
                     {
-                        taskItem.TaskTitleInput = taskItem.TaskTitle;
+                        taskItem._taskTitleInputTextBox.Text = taskItem.TaskTitle ?? string.Empty;
                         taskItem._taskTitleInputTextBox.Focus(FocusState.Programmatic);
                     }
                     else
                     {
-                        taskItem.TaskTitleInput = string.Empty;
+                        taskItem._taskTitleInputTextBox.Text = string.Empty;
                         taskItem.Focus(FocusState.Programmatic);
                     }
 
                     taskItem.UpdateVisualState();
-                }
-            });
-        }
-
-        private bool GoToVisualState(TaskItemStates state, bool useTransitions = false)
-        {
-            return GoToVisualState(state.ToString(), useTransitions);
-        }
-
-        /// <summary>
-        /// Update the visual state based upon the current conditions.
-        /// </summary>
-        private async void UpdateVisualState()
-        {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                if (IsEditModeEnabled)
-                {
-                    GoToVisualState(TaskItemStates.Editing);
-                }
-                else
-                {
-                    GoToVisualState(TaskItemStates.Normal);
-                }
-
-                if (IsCompleted)
-                {
-                    GoToVisualState(TaskItemStates.Completed);
-                }
-                else
-                {
-                    GoToVisualState(TaskItemStates.Uncompleted);
                 }
             });
         }

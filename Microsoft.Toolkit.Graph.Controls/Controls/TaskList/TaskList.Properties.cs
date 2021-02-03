@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.Graph;
@@ -94,49 +95,13 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <param name="e"></param>
         private static async void OnSelectedTaskListIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TaskList taskList)
+            await d.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                taskList.IsLoading = true;
-
-                taskList.AvailableTasks.Clear();
-                taskList.CompletedTasks.Clear();
-
-                int taskListIndex = (int)e.NewValue;
-                if (taskListIndex == -1 || taskList.TaskLists.Count == 0 || taskListIndex > taskList.TaskLists.Count)
+                if (d is TaskList taskList)
                 {
-                    taskList.IsLoading = false;
-                    return;
+                    taskList.LoadTasks();
                 }
-
-                taskList.SelectedTaskList = taskList.TaskLists[taskListIndex];
-
-                try
-                {
-                    var taskListId = taskList.SelectedTaskList.Id;
-                    var tasks = await TaskItemDataSource.GetTasksAsync(taskListId);
-
-                    foreach (var task in tasks)
-                    {
-                        var taskData = new TaskItemData(task, taskListId);
-                        if (taskData.IsCompleted)
-                        {
-                            taskList.CompletedTasks.Add(taskData);
-                        }
-                        else
-                        {
-                            taskList.AvailableTasks.Add(taskData);
-                        }
-                    }
-                }
-                catch
-                {
-                    // TODO: Handle error to retrieve Tasks
-                    taskList.GoToVisualState(CommonStates.Error, true);
-                    return;
-                }
-
-                taskList.IsLoading = false;
-            }
+            });
         }
 
         /// <summary>
@@ -147,9 +112,9 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public IList<TaskItemData> AvailableTasks
+        public IList<TodoTask> AvailableTasks
         {
-            get { return (IList<TaskItemData>)GetValue(AvailableTasksProperty); }
+            get { return (IList<TodoTask>)GetValue(AvailableTasksProperty); }
             set { SetValue(AvailableTasksProperty, value); }
         }
 
@@ -157,14 +122,14 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty AvailableTasksProperty =
-            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TaskItemData>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TaskItemData>()));
+            DependencyProperty.Register(nameof(AvailableTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
 
         /// <summary>
         /// Gets or sets the TaskDetails property value.
         /// </summary>
-        public IList<TaskItemData> CompletedTasks
+        public IList<TodoTask> CompletedTasks
         {
-            get { return (IList<TaskItemData>)GetValue(CompletedTasksProperty); }
+            get { return (IList<TodoTask>)GetValue(CompletedTasksProperty); }
             set { SetValue(CompletedTasksProperty, value); }
         }
 
@@ -172,6 +137,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// Todo task item metadata.
         /// </summary>
         public static readonly DependencyProperty CompletedTasksProperty =
-            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TaskItemData>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TaskItemData>()));
+            DependencyProperty.Register(nameof(CompletedTasks), typeof(IList<TodoTask>), typeof(TaskList), new PropertyMetadata(new ObservableCollection<TodoTask>()));
     }
 }

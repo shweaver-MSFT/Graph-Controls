@@ -3,11 +3,18 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Input;
+using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Controls.Data;
+using Microsoft.Toolkit.Graph.Controls.Extensions;
 using Microsoft.Toolkit.Graph.Providers;
+using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 
 namespace Microsoft.Toolkit.Graph.Controls
@@ -22,10 +29,20 @@ namespace Microsoft.Toolkit.Graph.Controls
         private const string TaskTitleInputTextBoxPart = "PART_TaskTitleInputTextBox";
         private const string TaskStatusCheckBoxPart = "PART_TaskStatusCheckBox";
 
-        private TextBox _taskTitleInputTextBox;
-        private CheckBox _taskStatusCheckBox;
+        private TextBox _taskTitleInputTextBox = null;
+        private CheckBox _taskStatusCheckBox = null;
 
-        private bool _isLoading;
+        private bool _isDeleted = false;
+        private bool _isLoading = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the underlying task has been deleted.
+        /// </summary>
+        protected bool IsDeleted
+        {
+            get => _isDeleted;
+            set => Set(ref _isDeleted, value);
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the component is loading.
@@ -33,29 +50,17 @@ namespace Microsoft.Toolkit.Graph.Controls
         protected bool IsLoading
         {
             get => _isLoading;
-            set
+            set => Set(ref _isLoading, value);
+        }
+
+        private void Set<T>(ref T field, T value)
+        {
+            if (!EqualityComparer<T>.Default.Equals(field, value))
             {
-                _isLoading = value;
+                field = value;
                 UpdateVisualState();
             }
         }
-
-        /*
-        /// <summary>
-        /// 
-        /// </summary>
-        public event RoutedEventHandler Checked;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public event RoutedEventHandler Indeterminate;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public event RoutedEventHandler Unchecked;
-        */
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskItem"/> class.
@@ -63,13 +68,11 @@ namespace Microsoft.Toolkit.Graph.Controls
         public TaskItem()
         {
             this.DefaultStyleKey = typeof(TaskItem);
-            IsLoading = false;
             ProviderManager.Instance.GlobalProvider.StateChanged += (s, e) => UpdateVisualState();
+            ContextRequested += OnContextRequested;
         }
 
-        /// <summary>
-        ///  <inheritdoc />
-        /// </summary>
+        /// <inheritdoc />
         protected override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -89,7 +92,6 @@ namespace Microsoft.Toolkit.Graph.Controls
             if (_taskStatusCheckBox != null)
             {
                 _taskStatusCheckBox.Checked -= TaskStatusCheckBox_Checked;
-                _taskStatusCheckBox.Indeterminate -= TaskStatusCheckBox_Indeterminate;
                 _taskStatusCheckBox.Unchecked -= TaskStatusCheckBox_Unchecked;
             }
 
@@ -98,33 +100,66 @@ namespace Microsoft.Toolkit.Graph.Controls
             if (_taskStatusCheckBox != null)
             {
                 _taskStatusCheckBox.Checked += TaskStatusCheckBox_Checked;
-                _taskStatusCheckBox.Indeterminate += TaskStatusCheckBox_Indeterminate;
                 _taskStatusCheckBox.Unchecked += TaskStatusCheckBox_Unchecked;
+            }
+        }
+
+        private void OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        {
+            if (TaskDetails == null)
+            {
+                return;
+            }
+
+            var contextMenu = new MenuFlyout();
+            contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Delete task", Command = new DelegateCommand(DeleteTask) });
+
+            if (IsEditModeEnabled)
+            {
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Save edits", Command = new DelegateCommand(SaveEditsAsync) });
+            }
+            else
+            {
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Rename task", Command = new DelegateCommand(ShowEditMode) });
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Open in To Do", Command = new DelegateCommand(OpenInToDoApp) });
+
+                switch (TaskDetails.Status)
+                {
+                    case Microsoft.Graph.TaskStatus.Completed:
+                        contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Unmark as completed", Command = new DelegateCommand(UnmarkAsCompleted) });
+                        break;
+
+                    default:
+                        contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Mark as completed", Command = new DelegateCommand(MarkAsCompleted) });
+                        break;
+                }
+            }
+
+            if (args.TryGetPosition(sender, out Point point))
+            {
+                contextMenu.ShowAt(this, new FlyoutShowOptions() { Position = point });
+            }
+            else
+            {
+                contextMenu.ShowAt(this);
             }
         }
 
         private void TaskStatusCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            // TODO: Save 
-            //Checked?.Invoke(this, e);
-        }
-
-        private void TaskStatusCheckBox_Indeterminate(object sender, RoutedEventArgs e)
-        {
-            //Indeterminate?.Invoke(this, e);
+            IsCompleted = true;
         }
 
         private void TaskStatusCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
-
-            //Unchecked?.Invoke(this, e);
+            IsCompleted = false;
         }
 
-        private async void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
+        private void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Enter)
             {
-                await TrySaveAsync();
+                SaveEditsAsync();
             }
         }
 
@@ -138,12 +173,17 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             IsLoading = true;
 
-            if (TaskDetails == null && !string.IsNullOrWhiteSpace(TaskListId) && !string.IsNullOrWhiteSpace(TaskId))
+            try
             {
-                TaskDetails = await TaskItemDataSource.GetTaskAsync(TaskListId, TaskId);
+                if (TaskDetails == null && !string.IsNullOrWhiteSpace(TaskListId) && !string.IsNullOrWhiteSpace(TaskId))
+                {
+                    TaskDetails = await TodoTaskDataSource.GetTaskAsync(TaskListId, TaskId);
+                }
             }
-
-            IsLoading = false;
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         /// <inheritdoc/>
@@ -154,38 +194,149 @@ namespace Microsoft.Toolkit.Graph.Controls
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Attempt to save any edits to the task.
-        /// </summary>
-        /// <returns>Success or failure boolean value.</returns>
-        public async Task<bool> TrySaveAsync()
+        private void MarkAsCompleted()
         {
-            var inputText = _taskTitleInputTextBox.Text;
-            if (string.IsNullOrWhiteSpace(inputText))
-            {
-                return false;
-            }
+            IsCompleted = true;
+        }
 
-            TaskDetails.Title = inputText.Trim();
-            var taskData = new TaskItemData(TaskDetails, TaskListId);
+        private void UnmarkAsCompleted()
+        {
+            IsCompleted = false;
+        }
+
+        private void ShowEditMode()
+        {
+            IsEditModeEnabled = true;
+        }
+
+        private void HideEditMode()
+        {
+            IsEditModeEnabled = false;
+        }
+
+        private async void DeleteTask()
+        {
+            IsLoading = true;
 
             try
             {
-                TaskDetails = taskData.IsNew
-                    ? await TaskItemDataSource.AddTaskAsync(taskData.TaskListId, taskData.TaskDetails)
-                    : await TaskItemDataSource.UpdateTaskAsync(taskData.TaskListId, taskData.TaskDetails);
+                await TodoTaskDataSource.DeleteTaskAsync(TaskListId, TaskId);
+                IsDeleted = true;
+                FireTaskDeletedEvent();
+            }
+            catch (Exception e)
+            {
+                // TODO: Handle failure to delete task.
+                System.Diagnostics.Debug.WriteLine("Failed to delete task: " + e.Message);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void OpenInToDoApp()
+        {
+            System.Diagnostics.Debug.WriteLine("Open the task in todo app");
+        }
+
+        private async void SaveEditsAsync()
+        {
+            if (!IsEditModeEnabled)
+            {
+                // Only save when in the appropriate mode.
+                return;
+            }
+
+            var inputText = _taskTitleInputTextBox.Text;
+            if (string.IsNullOrWhiteSpace(inputText))
+            {
+                // Don't save if the title input field is empty.
+                return;
+            }
+
+            IsLoading = true;
+
+            var taskDetailsForSave = new TodoTask()
+            {
+                Id = TaskDetails.Id,
+                Title = inputText.Trim(),
+            };
+
+            try
+            {
+                if (TaskDetails.IsNew())
+                {
+                    TaskDetails = await TodoTaskDataSource.AddTaskAsync(TaskListId, taskDetailsForSave);
+                }
+                else
+                {
+                    var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(TaskListId, taskDetailsForSave);
+                    TaskDetails.Title = updatedTask.Title;
+                }
+
+                // Sync up with the response data
+                TaskId = TaskDetails.Id;
+                TaskTitle = TaskDetails.Title;
+                IsCompleted = TaskDetails.IsCompleted();
             }
             catch (Exception e)
             {
                 // TODO: Handle failure to save modified task details
-                System.Diagnostics.Debug.WriteLine(e.Message);
-                return false;
+                System.Diagnostics.Debug.WriteLine("Failed to save edits: " + e.Message);
+                return;
+            }
+            finally
+            {
+                IsLoading = false;
             }
 
-            TaskTitle = TaskDetails.Title;
-            IsEditModeEnabled = false;
-            this.Focus(FocusState.Programmatic);
-            return true;
+            HideEditMode();
+            FireTaskDetailsChangedEvent();
+        }
+
+        private class DelegateCommand<T> : ICommand
+        {
+            private Action<T> _executeAction;
+
+            public event EventHandler CanExecuteChanged = null;
+
+            public DelegateCommand(Action<T> executeAction)
+            {
+                _executeAction = executeAction;
+            }
+
+            public bool CanExecute(object parameter)
+            {
+                return true;
+            }
+
+            public void Execute(object parameter)
+            {
+                _executeAction((T)parameter);
+            }
+        }
+
+        private class DelegateCommand : ICommand
+        {
+            private Action _executeAction;
+
+            public event EventHandler CanExecuteChanged = null;
+
+            public DelegateCommand(Action executeAction)
+            {
+                _executeAction = executeAction;
+            }
+
+            public bool CanExecute(object parameter = null)
+            {
+                return true;
+            }
+
+            public void Execute(object parameter = null)
+            {
+                _executeAction();
+            }
         }
     }
 }

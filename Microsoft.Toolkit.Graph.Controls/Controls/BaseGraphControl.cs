@@ -18,7 +18,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// An list of common states that Graph based controls should support at a minimum.
         /// </summary>
-        protected enum CommonStates
+        private enum LoginStates
         {
             /// <summary>
             /// The control is in a indeterminate state
@@ -64,7 +64,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                GoToVisualState(CommonStates.Indeterminate);
+                GoToVisualState(LoginStates.Indeterminate);
 
                 try
                 {
@@ -72,7 +72,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                     if (provider == null)
                     {
                         await ClearDataAsync();
-                        GoToVisualState(CommonStates.SignedOut);
+                        GoToVisualState(LoginStates.SignedOut);
                         return;
                     }
 
@@ -80,14 +80,14 @@ namespace Microsoft.Toolkit.Graph.Controls
                     {
                         case ProviderState.SignedIn:
                             await LoadDataAsync();
-                            GoToVisualState(CommonStates.SignedIn);
+                            GoToVisualState(LoginStates.SignedIn);
                             break;
                         case ProviderState.SignedOut:
                             await ClearDataAsync();
-                            GoToVisualState(CommonStates.SignedOut);
+                            GoToVisualState(LoginStates.SignedOut);
                             break;
                         case ProviderState.Loading:
-                            GoToVisualState(CommonStates.Indeterminate);
+                            GoToVisualState(LoginStates.Indeterminate);
                             break;
                     }
                 }
@@ -95,7 +95,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                 {
                     System.Diagnostics.Debug.WriteLine(e);
                     IsEnabled = false;
-                    GoToVisualState(CommonStates.Error);
+                    GoToVisualState(LoginStates.Error);
                 }
             });
         }
@@ -121,24 +121,24 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="useTransitions"></param>
         /// <returns></returns>
-        protected bool GoToVisualState(CommonStates state, bool useTransitions = false)
+        protected bool GoToErrorState(bool useTransitions = false)
         {
-            return GoToVisualState(state.ToString(), useTransitions);
+            return GoToVisualState(LoginStates.Error);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="useTransitions"></param>
         /// <returns></returns>
         protected bool GoToVisualState(string state, bool useTransitions = false)
         {
-            System.Diagnostics.Debug.WriteLine(state.ToString());
             return VisualStateManager.GoToState(this, state, useTransitions);
+        }
+
+        private bool GoToVisualState(LoginStates state, bool useTransitions = false)
+        {
+            return GoToVisualState(state.ToString(), useTransitions);
         }
     }
 }
