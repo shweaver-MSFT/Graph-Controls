@@ -11,14 +11,14 @@ namespace Microsoft.Toolkit.Graph.Controls
     public struct TaskDataModel
     {
         /// <summary>
-        /// Gets the id of the associated TaskList id, required for Graph calls.
+        /// Gets or sets the id of the associated TaskList id, required for Graph calls.
         /// </summary>
-        public string TaskListId { get; }
+        public string TaskListId { get; set; }
 
         /// <summary>
-        /// Gets the TodoTask object.
+        /// Gets or sets the TodoTask object.
         /// </summary>
-        public TodoTask Task { get; }
+        public TodoTask Task { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskDataModel"/> struct.

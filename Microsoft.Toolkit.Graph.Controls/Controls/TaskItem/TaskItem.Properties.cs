@@ -86,11 +86,13 @@ namespace Microsoft.Toolkit.Graph.Controls
                     taskItem.IsCompleted = false;
                     taskItem.IsEditModeEnabled = false;
                     taskItem.TaskTitle = null;
+                    taskItem.TaskId = null;
                 }
                 else
                 {
                     taskItem.IsCompleted = taskItem.TaskDetails.IsCompleted();
                     taskItem.TaskTitle = taskItem.TaskDetails.Title;
+                    taskItem.TaskId = taskItem.TaskDetails.Id;
                 }
 
                 taskItem.UpdateVisualState();

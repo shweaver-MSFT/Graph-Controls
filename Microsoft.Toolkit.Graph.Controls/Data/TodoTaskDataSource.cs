@@ -15,6 +15,10 @@ namespace Microsoft.Toolkit.Graph.Controls.Data
     /// </summary>
     public class TodoTaskDataSource
     {
+        public static EventHandler<TodoTask> TaskAdded;
+        public static EventHandler<TodoTask> TaskUpdated;
+        public static EventHandler<string> TaskDeleted;
+
         private static readonly bool FakeIt = false;
 
         private static GraphServiceClient Graph => ProviderManager.Instance.GlobalProvider.Graph;
@@ -92,6 +96,8 @@ namespace Microsoft.Toolkit.Graph.Controls.Data
             }
 
             await Graph.Me.Todo.Lists[taskListId].Tasks[taskId].Request().DeleteAsync();
+
+            TaskDeleted?.Invoke(taskListId, taskId);
         }
 
         /// <summary>
@@ -107,7 +113,11 @@ namespace Microsoft.Toolkit.Graph.Controls.Data
                 return task;
             }
 
-            return await Graph.Me.Todo.Lists[taskListId].Tasks[task.Id].Request().UpdateAsync(task);
+            var updatedTask = await Graph.Me.Todo.Lists[taskListId].Tasks[task.Id].Request().UpdateAsync(task);
+
+            TaskUpdated?.Invoke(taskListId, updatedTask);
+
+            return updatedTask;
         }
 
         /// <summary>
@@ -125,7 +135,11 @@ namespace Microsoft.Toolkit.Graph.Controls.Data
                 return task;
             }
 
-            return await Graph.Me.Todo.Lists[taskListId].Tasks.Request().AddAsync(task);
+            var newTask = await Graph.Me.Todo.Lists[taskListId].Tasks.Request().AddAsync(task);
+
+            TaskAdded?.Invoke(taskListId, newTask);
+
+            return newTask;
         }
     }
 }

@@ -220,7 +220,7 @@ namespace Microsoft.Toolkit.Graph.Controls
 
             try
             {
-                await TodoTaskDataSource.DeleteTaskAsync(TaskListId, TaskId);
+                await TodoTaskDataSource.DeleteTaskAsync(TaskListId, TaskDetails.Id);
                 IsDeleted = true;
                 FireTaskDeletedEvent();
             }

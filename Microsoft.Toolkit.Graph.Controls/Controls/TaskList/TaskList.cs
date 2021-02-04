@@ -96,6 +96,11 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             base.OnApplyTemplate();
 
+            TodoTaskDataSource.TaskUpdated += OnTaskUpdated;
+            TodoTaskDataSource.TaskDeleted += OnTaskDeleted;
+            TodoTaskDataSource.TaskAdded += OnTaskAdded;
+
+
             if (_addTaskButton != null)
             {
                 _addTaskButton.Click -= AddTaskButton_Click;
@@ -281,12 +286,97 @@ namespace Microsoft.Toolkit.Graph.Controls
             }
         }
 
+
+        private void OnTaskUpdated(object sender, TodoTask task)
+        {
+            var taskListId = (string)sender;
+
+            if (task.IsCompleted())
+            {
+                foreach (var taskModel in AvailableTasks)
+                {
+                    if (taskModel.Task.Id == task.Id)
+                    {
+                        AvailableTasks.Remove(taskModel);
+                        CompletedTasks.Add(new TaskDataModel(taskListId, task));
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var taskModel in CompletedTasks)
+                {
+                    if (taskModel.Task.Id == task.Id)
+                    {
+                        CompletedTasks.Remove(taskModel);
+                        AvailableTasks.Add(new TaskDataModel(taskListId, task));
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void OnTaskDeleted(object sender, string taskId)
+        {
+            // Find the task by id and remove it.
+            foreach (var taskModel in AvailableTasks)
+            {
+                if (taskModel.Task.Id == taskId)
+                {
+                    AvailableTasks.Remove(taskModel);
+                    return;
+                }
+            }
+
+            foreach (var taskModel in CompletedTasks)
+            {
+                if (taskModel.Task.Id == taskId)
+                {
+                    CompletedTasks.Remove(taskModel);
+                    break;
+                }
+            }
+        }
+
+        private void OnTaskAdded(object sender, TodoTask task)
+        {
+            var taskListId = (string)sender;
+            var newTaskModel = new TaskDataModel(taskListId, task);
+            if (task.IsCompleted())
+            {
+                for (var i = 0; i < CompletedTasks.Count; i++)
+                {
+                    if (CompletedTasks[i].Task.IsNew())
+                    {
+                        CompletedTasks.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                CompletedTasks.Insert(0, newTaskModel);
+            }
+            else
+            {
+                for (var i = 0; i < AvailableTasks.Count; i++)
+                {
+                    if (AvailableTasks[i].Task.IsNew())
+                    {
+                        AvailableTasks.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                AvailableTasks.Insert(0, newTaskModel);
+            }
+        }
+
         private async void LoadTasks()
         {
             IsLoading = true;
 
-            AvailableTasks.Clear();
-            CompletedTasks.Clear();
+            CompletedTasks = new ObservableCollection<TaskDataModel>();
+            AvailableTasks = new ObservableCollection<TaskDataModel>();
 
             int taskListIndex = SelectedTaskListIndex;
             if (taskListIndex == -1 || TaskLists.Count == 0 || taskListIndex > TaskLists.Count)
