@@ -2,21 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Toolkit.Graph.Providers;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 namespace SampleTest
@@ -26,6 +18,11 @@ namespace SampleTest
     /// </summary>
     sealed partial class App : Application
     {
+        private static readonly bool USE_MOCK_PROVIDER = true;
+        private static readonly string CLIENT_ID = "YOUR_CLIENT_ID_HERE";
+        private static readonly string[] SCOPES = new string[] { "User.Read", "User.ReadBasic.All", "People.Read", "Calendars.Read", "Mail.Read", "Group.Read.All", "ChannelMessage.Read.All", "Tasks.ReadWrite" };
+        private static readonly string REDIRECT_URI = "https://login.microsoftonline.com/common/oauth2/nativeclient";
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -43,6 +40,8 @@ namespace SampleTest
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            InitGlobalProvider();
+
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -99,6 +98,48 @@ namespace SampleTest
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+        private async void InitGlobalProvider()
+        {
+            if (ProviderManager.Instance.GlobalProvider != null)
+            {
+                return;
+            }
+
+            if (USE_MOCK_PROVIDER)
+            {
+                ProviderManager.Instance.GlobalProvider = new MockProvider(true);
+                return;
+            }
+
+            ProviderManager.Instance.GlobalProvider = await CreateMsalProviderAsync(CLIENT_ID, REDIRECT_URI, SCOPES);
+        }
+
+        /// <summary>
+        /// Easily creates a <see cref="MsalProvider"/> from a ClientId.
+        /// </summary>
+        /// <param name="clientid">Registered ClientId.</param>
+        /// <param name="redirectUri">RedirectUri for auth response.</param>
+        /// <param name="scopes">List of Scopes to initially request.</param>
+        /// <returns>New <see cref="MsalProvider"/> reference.</returns>
+        public static async Task<MsalProvider> CreateMsalProviderAsync(string clientid, string redirectUri, string[] scopes = null)
+        {
+            var client = Microsoft.Identity.Client.PublicClientApplicationBuilder.Create(clientid)
+                .WithAuthority(Microsoft.Identity.Client.AzureCloudInstance.AzurePublic, Microsoft.Identity.Client.AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount)
+                .WithRedirectUri(redirectUri)
+                .WithClientName(ProviderManager.ClientName)
+                .WithClientVersion(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString())
+                .Build();
+
+            if (scopes == null)
+            {
+                scopes = new string[] { string.Empty };
+            }
+
+            var provider = new Microsoft.Graph.Auth.InteractiveAuthenticationProvider(client, scopes);
+
+            return await MsalProvider.CreateAsync(client, provider);
         }
     }
 }
