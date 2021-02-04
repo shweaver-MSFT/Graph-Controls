@@ -93,8 +93,9 @@
                                         Foreground="{TemplateBinding Foreground}"
                                         Grid.Column="1"
                                         VerticalAlignment="Center"
-                                        Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}"
-                                        x:Name="PART_TaskTitleTextBlock" />
+                                        x:Name="PART_TaskTitleTextBlock">
+                                        <Run Text="{Binding TaskTitle, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    </TextBlock>
 
                                     <!-- Task Metadata -->
                                     <!--<TextBlock
@@ -158,22 +159,15 @@
                             </VisualStateGroup>
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal" />
+                                <VisualState x:Name="Completed">
+                                    <VisualState.Setters>
+                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="Strikethrough" />
+                                    </VisualState.Setters>
+                                </VisualState>
                                 <VisualState x:Name="Editing">
                                     <VisualState.Setters>
                                         <Setter Target="PART_NormalPanel.Visibility" Value="Collapsed" />
                                         <Setter Target="PART_EditPanel.Visibility" Value="Visible" />
-                                    </VisualState.Setters>
-                                </VisualState>
-                            </VisualStateGroup>
-                            <VisualStateGroup x:Name="CompletionStates">
-                                <VisualState x:Name="Uncompleted">
-                                    <VisualState.Setters>
-                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="None" />
-                                    </VisualState.Setters>
-                                </VisualState>
-                                <VisualState x:Name="Completed">
-                                    <VisualState.Setters>
-                                        <Setter Target="PART_TaskTitleTextBlock.TextDecorations" Value="Strikethrough" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

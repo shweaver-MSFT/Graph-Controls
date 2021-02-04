@@ -125,40 +125,44 @@ namespace Microsoft.Toolkit.Graph.Controls
                         return;
                     }
 
-                    taskItem.IsLoading = true;
-                    var oldStatus = taskItem.TaskDetails.Status.ToString();
                     var newIsCompleted = (bool)e.NewValue;
-                    if (!task.IsNew() && task.IsCompleted() != newIsCompleted)
+                    if (task.IsNew() || task.IsCompleted() == newIsCompleted)
                     {
-                        try
-                        {
-                            var newStatus = newIsCompleted ? TaskStatus.Completed : TaskStatus.NotStarted;
-                            var taskForUpdate = new TodoTask()
-                            {
-                                Id = task.Id,
-                                Status = newStatus,
-                            };
-
-                            var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(taskItem.TaskListId, taskForUpdate);
-                            taskItem.TaskDetails.Status = newStatus;
-
-                            if (updatedTask.IsCompleted())
-                            {
-                                taskItem.FireTaskCompletedEvent();
-                            }
-                            else
-                            {
-                                taskItem.FireTaskUncompletedEvent();
-                            }
-                        }
-                        catch
-                        {
-                            // Restore previous value if not successful.
-                            taskItem.IsCompleted = (bool)e.OldValue;
-                        }
+                        return;
                     }
 
-                    taskItem.IsLoading = false;
+                    taskItem.IsLoading = true;
+
+                    try
+                    {
+                        var newStatus = newIsCompleted ? TaskStatus.Completed : TaskStatus.NotStarted;
+                        var taskForUpdate = new TodoTask()
+                        {
+                            Id = task.Id,
+                            Status = newStatus,
+                        };
+
+                        var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(taskItem.TaskListId, taskForUpdate);
+                        taskItem.TaskDetails.Status = newStatus;
+
+                        if (updatedTask.IsCompleted())
+                        {
+                            taskItem.FireTaskCompletedEvent();
+                        }
+                        else
+                        {
+                            taskItem.FireTaskUncompletedEvent();
+                        }
+                    }
+                    catch
+                    {
+                        // Restore previous value if not successful.
+                        taskItem.IsCompleted = (bool)e.OldValue;
+                    }
+                    finally
+                    {
+                        taskItem.IsLoading = false;
+                    }
                 }
             });
         }

@@ -18,11 +18,6 @@ namespace Microsoft.Toolkit.Graph.Controls
         private enum TaskItemStates
         {
             /// <summary>
-            /// The component has not yet begun loading data.
-            /// </summary>
-            Unloaded,
-
-            /// <summary>
             /// An indeterminate state while the task data is loading data.
             /// </summary>
             Loading,
@@ -51,11 +46,6 @@ namespace Microsoft.Toolkit.Graph.Controls
             /// The task has been completed.
             /// </summary>
             Completed,
-
-            /// <summary>
-            /// The task is not yet completed.
-            /// </summary>
-            Uncompleted,
         }
 
         private bool GoToVisualState(TaskItemStates state, bool useTransitions = false)
@@ -86,19 +76,13 @@ namespace Microsoft.Toolkit.Graph.Controls
                 {
                     GoToVisualState(TaskItemStates.Editing);
                 }
-                else
-                {
-                    GoToVisualState(TaskItemStates.Normal);
-                }
-
-                // Completion states
-                if (IsCompleted)
+                else if (IsCompleted)
                 {
                     GoToVisualState(TaskItemStates.Completed);
                 }
                 else
                 {
-                    GoToVisualState(TaskItemStates.Uncompleted);
+                    GoToVisualState(TaskItemStates.Normal);
                 }
             });
         }
