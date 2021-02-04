@@ -94,7 +94,6 @@ namespace Microsoft.Toolkit.Graph.Controls
                 catch (Exception e)
                 {
                     System.Diagnostics.Debug.WriteLine(e);
-                    IsEnabled = false;
                     GoToVisualState(LoginStates.Error);
                 }
             });

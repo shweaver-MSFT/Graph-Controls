@@ -83,7 +83,6 @@ namespace Microsoft.Toolkit.Graph.Controls
                 var newTaskDetails = (TodoTask)e.NewValue;
                 if (newTaskDetails == null)
                 {
-                    taskItem.IsCompleted = false;
                     taskItem.IsEditModeEnabled = false;
                     taskItem.TaskTitle = null;
                     taskItem.TaskId = null;
@@ -127,23 +126,23 @@ namespace Microsoft.Toolkit.Graph.Controls
                     }
 
                     taskItem.IsLoading = true;
-
+                    var oldStatus = taskItem.TaskDetails.Status.ToString();
                     var newIsCompleted = (bool)e.NewValue;
                     if (!task.IsNew() && task.IsCompleted() != newIsCompleted)
                     {
-                        var newStatus = newIsCompleted ? TaskStatus.Completed : TaskStatus.NotStarted;
-                        var taskForUpdate = new TodoTask()
-                        {
-                            Id = task.Id,
-                            Status = newStatus,
-                        };
-
                         try
                         {
-                            var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(taskItem.TaskListId, taskForUpdate);
-                            taskItem.TaskDetails.Status = updatedTask.Status;
+                            var newStatus = newIsCompleted ? TaskStatus.Completed : TaskStatus.NotStarted;
+                            var taskForUpdate = new TodoTask()
+                            {
+                                Id = task.Id,
+                                Status = newStatus,
+                            };
 
-                            if (taskItem.TaskDetails.IsCompleted())
+                            var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(taskItem.TaskListId, taskForUpdate);
+                            taskItem.TaskDetails.Status = newStatus;
+
+                            if (updatedTask.IsCompleted())
                             {
                                 taskItem.FireTaskCompletedEvent();
                             }

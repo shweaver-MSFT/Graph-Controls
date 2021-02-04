@@ -288,9 +288,6 @@ namespace Microsoft.Toolkit.Graph.Controls
 
         private async void OnTaskUpdated(object sender, TodoTask task)
         {
-            System.Diagnostics.Debug.WriteLine("TASK_UPDATED");
-
-
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 var taskListId = (string)sender;
@@ -301,7 +298,6 @@ namespace Microsoft.Toolkit.Graph.Controls
                     if (taskModel.Task.Id == task.Id)
                     {
                         AvailableTasks.RemoveAt(i);
-                        System.Diagnostics.Debug.WriteLine("Removing available task");
                         break;
                     }
                 }
@@ -312,7 +308,6 @@ namespace Microsoft.Toolkit.Graph.Controls
                     if (taskModel.Task.Id == task.Id)
                     {
                         CompletedTasks.RemoveAt(i);
-                        System.Diagnostics.Debug.WriteLine("Removing completed task");
                         break;
                     }
                 }
@@ -320,12 +315,10 @@ namespace Microsoft.Toolkit.Graph.Controls
                 if (task.IsCompleted())
                 {
                     CompletedTasks.Add(new TaskDataModel(taskListId, task));
-                        System.Diagnostics.Debug.WriteLine("Adding completed task");
                 }
                 else
                 {
                     AvailableTasks.Add(new TaskDataModel(taskListId, task));
-                        System.Diagnostics.Debug.WriteLine("Adding available task");
                 }
             });
         }
