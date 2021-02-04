@@ -286,137 +286,159 @@ namespace Microsoft.Toolkit.Graph.Controls
             }
         }
 
-
-        private void OnTaskUpdated(object sender, TodoTask task)
+        private async void OnTaskUpdated(object sender, TodoTask task)
         {
-            var taskListId = (string)sender;
+            System.Diagnostics.Debug.WriteLine("TASK_UPDATED");
 
-            if (task.IsCompleted())
-            {
-                foreach (var taskModel in AvailableTasks)
-                {
-                    if (taskModel.Task.Id == task.Id)
-                    {
-                        AvailableTasks.Remove(taskModel);
-                        CompletedTasks.Add(new TaskDataModel(taskListId, task));
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var taskModel in CompletedTasks)
-                {
-                    if (taskModel.Task.Id == task.Id)
-                    {
-                        CompletedTasks.Remove(taskModel);
-                        AvailableTasks.Add(new TaskDataModel(taskListId, task));
-                        break;
-                    }
-                }
-            }
-        }
 
-        private void OnTaskDeleted(object sender, string taskId)
-        {
-            // Find the task by id and remove it.
-            foreach (var taskModel in AvailableTasks)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (taskModel.Task.Id == taskId)
-                {
-                    AvailableTasks.Remove(taskModel);
-                    return;
-                }
-            }
+                var taskListId = (string)sender;
 
-            foreach (var taskModel in CompletedTasks)
-            {
-                if (taskModel.Task.Id == taskId)
-                {
-                    CompletedTasks.Remove(taskModel);
-                    break;
-                }
-            }
-        }
-
-        private void OnTaskAdded(object sender, TodoTask task)
-        {
-            var taskListId = (string)sender;
-            var newTaskModel = new TaskDataModel(taskListId, task);
-            if (task.IsCompleted())
-            {
-                for (var i = 0; i < CompletedTasks.Count; i++)
-                {
-                    if (CompletedTasks[i].Task.IsNew())
-                    {
-                        CompletedTasks.RemoveAt(i);
-                        break;
-                    }
-                }
-
-                CompletedTasks.Insert(0, newTaskModel);
-            }
-            else
-            {
                 for (var i = 0; i < AvailableTasks.Count; i++)
                 {
-                    if (AvailableTasks[i].Task.IsNew())
+                    var taskModel = AvailableTasks[i];
+                    if (taskModel.Task.Id == task.Id)
                     {
                         AvailableTasks.RemoveAt(i);
+                        System.Diagnostics.Debug.WriteLine("Removing available task");
                         break;
                     }
                 }
 
-                AvailableTasks.Insert(0, newTaskModel);
-            }
+                for (var i = 0; i < CompletedTasks.Count; i++)
+                {
+                    var taskModel = CompletedTasks[i];
+                    if (taskModel.Task.Id == task.Id)
+                    {
+                        CompletedTasks.RemoveAt(i);
+                        System.Diagnostics.Debug.WriteLine("Removing completed task");
+                        break;
+                    }
+                }
+
+                if (task.IsCompleted())
+                {
+                    CompletedTasks.Add(new TaskDataModel(taskListId, task));
+                        System.Diagnostics.Debug.WriteLine("Adding completed task");
+                }
+                else
+                {
+                    AvailableTasks.Add(new TaskDataModel(taskListId, task));
+                        System.Diagnostics.Debug.WriteLine("Adding available task");
+                }
+            });
+        }
+
+        private async void OnTaskDeleted(object sender, string taskId)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                // Find the task by id and remove it.
+                foreach (var taskModel in AvailableTasks)
+                {
+                    if (taskModel.Task.Id == taskId)
+                    {
+                        AvailableTasks.Remove(taskModel);
+                        return;
+                    }
+                }
+
+                foreach (var taskModel in CompletedTasks)
+                {
+                    if (taskModel.Task.Id == taskId)
+                    {
+                        CompletedTasks.Remove(taskModel);
+                        break;
+                    }
+                }
+            });
+        }
+
+        private async void OnTaskAdded(object sender, TodoTask task)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                var taskListId = (string)sender;
+                var newTaskModel = new TaskDataModel(taskListId, task);
+                if (task.IsCompleted())
+                {
+                    for (var i = 0; i < CompletedTasks.Count; i++)
+                    {
+                        if (CompletedTasks[i].Task.IsNew())
+                        {
+                            CompletedTasks.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    CompletedTasks.Insert(0, newTaskModel);
+                }
+                else
+                {
+                    for (var i = 0; i < AvailableTasks.Count; i++)
+                    {
+                        if (AvailableTasks[i].Task.IsNew())
+                        {
+                            AvailableTasks.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    AvailableTasks.Insert(0, newTaskModel);
+                }
+            });
         }
 
         private async void LoadTasks()
         {
-            IsLoading = true;
-
-            CompletedTasks = new ObservableCollection<TaskDataModel>();
-            AvailableTasks = new ObservableCollection<TaskDataModel>();
-
-            int taskListIndex = SelectedTaskListIndex;
-            if (taskListIndex == -1 || TaskLists.Count == 0 || taskListIndex > TaskLists.Count)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                IsLoading = false;
-                return;
-            }
+                IsLoading = true;
 
-            SelectedTaskList = TaskLists[taskListIndex];
+                CompletedTasks = new ObservableCollection<TaskDataModel>();
+                AvailableTasks = new ObservableCollection<TaskDataModel>();
 
-            try
-            {
-                var taskListId = SelectedTaskList.Id;
-                var tasks = await TodoTaskDataSource.GetTasksAsync(taskListId);
-
-                foreach (var task in tasks)
+                int taskListIndex = SelectedTaskListIndex;
+                if (taskListIndex == -1 || TaskLists.Count == 0 || taskListIndex > TaskLists.Count)
                 {
-                    var taskModel = new TaskDataModel(taskListId, task);
+                    IsLoading = false;
+                    return;
+                }
 
-                    if (task.IsCompleted())
+                SelectedTaskList = TaskLists[taskListIndex];
+
+                try
+                {
+                    var taskListId = SelectedTaskList.Id;
+                    var tasks = await TodoTaskDataSource.GetTasksAsync(taskListId);
+
+                    foreach (var task in tasks)
                     {
-                        CompletedTasks.Add(taskModel);
-                    }
-                    else
-                    {
-                        AvailableTasks.Add(taskModel);
+                        var taskModel = new TaskDataModel(taskListId, task);
+
+                        if (task.IsCompleted())
+                        {
+                            CompletedTasks.Add(taskModel);
+                        }
+                        else
+                        {
+                            AvailableTasks.Add(taskModel);
+                        }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                // TODO: Handle error to retrieve Tasks
-                System.Diagnostics.Debug.WriteLine("Failed to load tasks: " + e.Message);
-                GoToErrorState();
-                return;
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+                catch (Exception e)
+                {
+                    // TODO: Handle error to retrieve Tasks
+                    System.Diagnostics.Debug.WriteLine("Failed to load tasks: " + e.Message);
+                    GoToErrorState();
+                    return;
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            });
         }
 
         private void ShowTaskItemContextMenu(TaskItem taskItem)

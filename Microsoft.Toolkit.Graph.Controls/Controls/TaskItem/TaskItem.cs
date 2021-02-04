@@ -23,14 +23,11 @@ namespace Microsoft.Toolkit.Graph.Controls
     /// A visualization of a single Todo task item.
     /// </summary>
     [TemplatePart(Name = TaskTitleInputTextBoxPart, Type = typeof(TextBox))]
-    [TemplatePart(Name = TaskStatusCheckBoxPart, Type = typeof(CheckBox))]
     public partial class TaskItem : BaseGraphControl
     {
         private const string TaskTitleInputTextBoxPart = "PART_TaskTitleInputTextBox";
-        private const string TaskStatusCheckBoxPart = "PART_TaskStatusCheckBox";
 
         private TextBox _taskTitleInputTextBox = null;
-        private CheckBox _taskStatusCheckBox = null;
 
         private bool _isDeleted = false;
         private bool _isLoading = false;
@@ -88,20 +85,6 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 _taskTitleInputTextBox.KeyUp += TaskTitleInputTextBox_KeyUp;
             }
-
-            if (_taskStatusCheckBox != null)
-            {
-                _taskStatusCheckBox.Checked -= TaskStatusCheckBox_Checked;
-                _taskStatusCheckBox.Unchecked -= TaskStatusCheckBox_Unchecked;
-            }
-
-            _taskStatusCheckBox = GetTemplateChild(TaskStatusCheckBoxPart) as CheckBox;
-
-            if (_taskStatusCheckBox != null)
-            {
-                _taskStatusCheckBox.Checked += TaskStatusCheckBox_Checked;
-                _taskStatusCheckBox.Unchecked += TaskStatusCheckBox_Unchecked;
-            }
         }
 
         private void OnContextRequested(UIElement sender, ContextRequestedEventArgs args)
@@ -143,16 +126,6 @@ namespace Microsoft.Toolkit.Graph.Controls
             {
                 contextMenu.ShowAt(this);
             }
-        }
-
-        private void TaskStatusCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            IsCompleted = true;
-        }
-
-        private void TaskStatusCheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            IsCompleted = false;
         }
 
         private void TaskTitleInputTextBox_KeyUp(object sender, KeyRoutedEventArgs e)

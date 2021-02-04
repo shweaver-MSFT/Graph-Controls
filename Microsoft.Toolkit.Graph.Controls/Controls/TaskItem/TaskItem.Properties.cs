@@ -141,9 +141,9 @@ namespace Microsoft.Toolkit.Graph.Controls
                         try
                         {
                             var updatedTask = await TodoTaskDataSource.UpdateTaskAsync(taskItem.TaskListId, taskForUpdate);
-                            taskItem.TaskDetails = updatedTask;
+                            taskItem.TaskDetails.Status = updatedTask.Status;
 
-                            if (newIsCompleted)
+                            if (taskItem.TaskDetails.IsCompleted())
                             {
                                 taskItem.FireTaskCompletedEvent();
                             }
