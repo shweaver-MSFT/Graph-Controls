@@ -139,24 +139,27 @@ namespace Microsoft.Toolkit.Graph.Controls
         /// <inheritdoc/>
         protected override async Task LoadDataAsync()
         {
-            if (IsLoading)
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                return;
-            }
-
-            IsLoading = true;
-
-            try
-            {
-                if (TaskDetails == null && !string.IsNullOrWhiteSpace(TaskListId) && !string.IsNullOrWhiteSpace(TaskId))
+                if (IsLoading)
                 {
-                    TaskDetails = await TodoTaskDataSource.GetTaskAsync(TaskListId, TaskId);
+                    return;
                 }
-            }
-            finally
-            {
-                IsLoading = false;
-            }
+
+                IsLoading = true;
+
+                try
+                {
+                    if (TaskDetails == null && !string.IsNullOrWhiteSpace(TaskListId) && !string.IsNullOrWhiteSpace(TaskId))
+                    {
+                        TaskDetails = await TodoTaskDataSource.GetTaskAsync(TaskListId, TaskId);
+                    }
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            });
         }
 
         /// <inheritdoc/>

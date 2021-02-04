@@ -174,15 +174,7 @@ namespace Microsoft.Toolkit.Graph.Controls
                     if (defaultTaskList != default)
                     {
                         var defaultIndex = TaskLists.IndexOf(defaultTaskList);
-                        if (SelectedTaskListIndex == defaultIndex)
-                        {
-                            // If the SelectedTaskIndex isn't changed, we need to manually trigger the tasks to load.
-                            LoadTasks();
-                        }
-                        else
-                        {
-                            SelectedTaskListIndex = defaultIndex;
-                        }
+                        SelectedTaskListIndex = defaultIndex;
                     }
                 }
 
