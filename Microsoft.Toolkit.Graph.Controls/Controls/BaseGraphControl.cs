@@ -72,29 +72,26 @@ namespace Microsoft.Toolkit.Graph.Controls
                     if (provider == null)
                     {
                         await ClearDataAsync();
-                        GoToVisualState(LoginStates.SignedOut);
-                        return;
+                    }
+                    else
+                    {
+                        switch (provider.State)
+                        {
+                            case ProviderState.SignedIn:
+                                await LoadDataAsync();
+                                break;
+                            case ProviderState.SignedOut:
+                                await ClearDataAsync();
+                                break;
+                        }
                     }
 
-                    switch (provider.State)
-                    {
-                        case ProviderState.SignedIn:
-                            await LoadDataAsync();
-                            GoToVisualState(LoginStates.SignedIn);
-                            break;
-                        case ProviderState.SignedOut:
-                            await ClearDataAsync();
-                            GoToVisualState(LoginStates.SignedOut);
-                            break;
-                        case ProviderState.Loading:
-                            GoToVisualState(LoginStates.Indeterminate);
-                            break;
-                    }
+                    UpdateVisualState();
                 }
                 catch (Exception e)
                 {
                     System.Diagnostics.Debug.WriteLine(e);
-                    GoToVisualState(LoginStates.Error);
+                    GoToErrorState();
                 }
             });
         }
@@ -124,6 +121,32 @@ namespace Microsoft.Toolkit.Graph.Controls
         protected bool GoToErrorState(bool useTransitions = false)
         {
             return GoToVisualState(LoginStates.Error);
+        }
+
+        private void UpdateVisualState()
+        {
+            var provider = ProviderManager.Instance.GlobalProvider;
+            if (provider == null)
+            {
+                GoToVisualState(LoginStates.SignedOut);
+                return;
+            }
+
+            switch (provider.State)
+            {
+                case ProviderState.SignedOut:
+                    GoToVisualState(LoginStates.SignedOut);
+                    break;
+                case ProviderState.SignedIn:
+                    GoToVisualState(LoginStates.SignedIn);
+                    break;
+                case ProviderState.Loading:
+                    GoToVisualState(LoginStates.Indeterminate);
+                    break;
+                default:
+                    GoToVisualState(LoginStates.Error);
+                    break;
+            }
         }
 
         /// <summary>

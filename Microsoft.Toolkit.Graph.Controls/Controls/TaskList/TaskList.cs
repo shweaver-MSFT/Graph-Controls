@@ -87,8 +87,16 @@ namespace Microsoft.Toolkit.Graph.Controls
         public TaskList()
         {
             DefaultStyleKey = typeof(TaskList);
-            IsLoading = false;
-            ProviderManager.Instance.GlobalProvider.StateChanged += (s, e) => UpdateVisualState();
+            _isLoading = false;
+            ProviderManager.Instance.ProviderUpdated += OnProviderUpdated;
+        }
+
+        private void OnProviderUpdated(object sender, ProviderUpdatedEventArgs e)
+        {
+            if (e.Reason == ProviderManagerChangedState.ProviderStateChanged)
+            {
+                UpdateVisualState();
+            }
         }
 
         /// <inheritdoc/>
@@ -99,7 +107,6 @@ namespace Microsoft.Toolkit.Graph.Controls
             TodoTaskDataSource.TaskUpdated += OnTaskUpdated;
             TodoTaskDataSource.TaskDeleted += OnTaskDeleted;
             TodoTaskDataSource.TaskAdded += OnTaskAdded;
-
 
             if (_addTaskButton != null)
             {
@@ -199,10 +206,7 @@ namespace Microsoft.Toolkit.Graph.Controls
             });
         }
 
-        /// <summary>
-        /// Update the visual state based upon the current conditions.
-        /// </summary>
-        protected void UpdateVisualState()
+        private void UpdateVisualState()
         {
             var provider = ProviderManager.Instance.GlobalProvider;
             if (provider.State == ProviderState.SignedIn)

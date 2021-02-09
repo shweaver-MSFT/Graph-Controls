@@ -25,6 +25,20 @@ namespace SampleTest
         public MainPage()
         {
             this.InitializeComponent();
+            ProviderManager.Instance.ProviderUpdated += this.Instance_ProviderUpdated;
+        }
+
+        private void Instance_ProviderUpdated(object sender, ProviderUpdatedEventArgs e)
+        {
+            IProvider provider = ProviderManager.Instance.GlobalProvider;
+            if (provider != null)
+            {
+                string teamId = "02bd9fd6-8f93-4758-87c3-1fb73740a315";
+                string channelId = "19:d0bba23c2fc8413991125a43a54cc30e@thread.skype";
+
+                // Workaround for https://github.com/microsoft/microsoft-ui-xaml/issues/3064
+                TeamsMessagePresenter.RequestBuilder = ProviderManager.Instance.GlobalProvider.Graph.Teams[teamId].Channels[channelId].Messages;
+            }
         }
 
         public static string ToLocalTime(DateTimeTimeZone value)
@@ -48,12 +62,6 @@ namespace SampleTest
         public static bool IsTaskCompleted(int? percentCompleted)
         {
             return percentCompleted == 100;
-        }
-
-        public static IBaseRequestBuilder GetTeamsChannelMessagesBuilder(string team, string channel)
-        {
-            // Workaround for https://github.com/microsoft/microsoft-ui-xaml/issues/3064
-            return ProviderManager.Instance.GlobalProvider.Graph.Teams[team].Channels[channel].Messages;
         }
     }
 }

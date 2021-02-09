@@ -13,7 +13,7 @@ using Windows.Security.Authentication.Web;
 using Windows.Security.Authentication.Web.Core;
 using Windows.UI.ApplicationSettings;
 
-namespace Microsoft.Toolkit.Graph.Providers.Uwp
+namespace Microsoft.Toolkit.Graph.Providers
 {
     /// <summary>
     /// A provider for leveraging Windows system authentication.
@@ -42,7 +42,7 @@ namespace Microsoft.Toolkit.Graph.Providers.Uwp
 
         private const string TokenCredentialResourceName = "WindowsProviderToken";
         private const string WebAccountProviderId = "https://login.microsoft.com";
-        private static readonly string[] DefaultScopes = new string[] { "user.read" };
+        private static readonly ScopeSet DefaultScopes = new ScopeSet { "user.read" };
         private static readonly string GraphResourceProperty = "https://graph.microsoft.com";
 
         /// <summary>
@@ -52,24 +52,22 @@ namespace Microsoft.Toolkit.Graph.Providers.Uwp
 
         private AccountsSettingsPane _currentPane;
         private AuthenticatedUser? _currentUser;
-        private string[] _scopes;
+        private ScopeSet _scopes;
         private string _clientId;
 
         /// <summary>
         /// Creates a new instance of the WindowsProvider and attempts to sign in silently.
         /// </summary>
-        /// <param name="clientId"></param>
-        /// <param name="scopes"></param>
-        /// <param name="tenant"></param>
-        /// <returns></returns>
-        public static async Task<WindowsProvider> CreateAsync(string clientId, string[] scopes = null)
+        /// <param name="config"></param>
+        /// <returns>A new instance of a WindowsProvider.</returns>
+        public static async Task<WindowsProvider> CreateAsync(GraphConfig config)
         {
-            var provider = new WindowsProvider(clientId, scopes);
+            var provider = new WindowsProvider(config.ClientId, config.Scopes);
             await provider.TrySilentSignInAsync();
             return provider;
         }
 
-        private WindowsProvider(string clientId, string[] scopes = null)
+        private WindowsProvider(string clientId, ScopeSet scopes = null)
         {
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _currentPane = null;

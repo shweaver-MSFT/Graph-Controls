@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Graph.Providers;
-using Microsoft.Toolkit.Graph.Providers.Uwp;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
@@ -33,21 +32,21 @@ namespace SampleTest
             this.Suspending += OnSuspending;
         }
 
-        private async Task InitGlobalProvider()
-        {
-            if (ProviderManager.Instance.GlobalProvider != null)
-            {
-                return;
-            }
+        //private async Task InitGlobalProvider()
+        //{
+        //    if (ProviderManager.Instance.GlobalProvider != null)
+        //    {
+        //        return;
+        //    }
 
-            if (USE_MOCK_PROVIDER)
-            {
-                ProviderManager.Instance.GlobalProvider = new MockProvider(true);
-                return;
-            }
+        //    if (USE_MOCK_PROVIDER)
+        //    {
+        //        ProviderManager.Instance.GlobalProvider = new MockProvider(true);
+        //        return;
+        //    }
 
-            ProviderManager.Instance.GlobalProvider = await WindowsProvider.CreateAsync(CLIENT_ID, SCOPES);
-        }
+        //    ProviderManager.Instance.GlobalProvider = await WindowsProvider.CreateAsync(CLIENT_ID, SCOPES);
+        //}
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -56,7 +55,7 @@ namespace SampleTest
         /// <param name="e">Details about the launch request and process.</param>
         protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
-            await InitGlobalProvider();
+            //await InitGlobalProvider();
 
             Frame rootFrame = Window.Current.Content as Frame;
 

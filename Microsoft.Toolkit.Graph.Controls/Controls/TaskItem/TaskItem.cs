@@ -65,8 +65,16 @@ namespace Microsoft.Toolkit.Graph.Controls
         public TaskItem()
         {
             this.DefaultStyleKey = typeof(TaskItem);
-            ProviderManager.Instance.GlobalProvider.StateChanged += (s, e) => UpdateVisualState();
+            ProviderManager.Instance.ProviderUpdated += OnProviderUpdated;
             ContextRequested += OnContextRequested;
+        }
+
+        private void OnProviderUpdated(object sender, ProviderUpdatedEventArgs e)
+        {
+            if (e.Reason == ProviderManagerChangedState.ProviderStateChanged)
+            {
+                UpdateVisualState();
+            }
         }
 
         /// <inheritdoc />

@@ -97,7 +97,7 @@ namespace Microsoft.Toolkit.Graph.Controls
         {
             await d.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                if (d is TaskList taskList)
+                if ((int)e.NewValue != -1 && d is TaskList taskList)
                 {
                     taskList.LoadTasks();
                 }
