@@ -24,9 +24,9 @@
         <!--<providers:MockProviderBehavior />-->
     <!--</Interactivity:Interaction.Behaviors>-->
     <providers:GraphExtensions.GraphConfig>
-        <!--<providers:MsalConfig ClientId="YOUR_CLIENT_ID_HERE" Scopes="User.Read,User.ReadBasic.All,People.Read,Calendars.Read,Mail.Read,Group.Read.All,ChannelMessage.Read.All" />-->
-        <!--<providers:WindowsConfig ClientId="YOUR_CLIENT_ID_HERE" Scopes="User.Read,User.ReadBasic.All,People.Read,Calendars.Read,Mail.Read,Group.Read.All,ChannelMessage.Read.All" />-->
-        <providers:MockConfig />
+        <!--<providers:MsalConfig ClientId="a974dfa0-9f57-49b9-95db-90f04ce2111a" Scopes="User.Read,User.ReadBasic.All,People.Read,Calendars.Read,Mail.Read,Group.Read.All,ChannelMessage.Read.All,Tasks.ReadWrite" />-->
+        <providers:WindowsConfig ClientId="a974dfa0-9f57-49b9-95db-90f04ce2111a" Scopes="user.read,tasks.readwrite" />
+        <!--<providers:MockConfig />-->
     </providers:GraphExtensions.GraphConfig>
 
     <Pivot>
@@ -42,6 +42,20 @@
                 <TextBlock TextWrapping="WrapWholeWords">
                     The `LoginButton` above allows your user and application to easily connect to the Microsoft Graph. They can then also easily logout from the drop-down menu.
                 </TextBlock>
+            </StackPanel>
+        </PivotItem>
+        <PivotItem Header="Todo Tasks">
+            <StackPanel>
+                <wgt:TaskItem
+                    Background="AntiqueWhite"
+                    BorderBrush="Green"
+                    BorderThickness="2"
+                    TaskId="AQMkADAwATM3ZmYAZS1iYTljLTc4NDgtMDACLTAwCgBGAAAD381MccKA0UeLdgJgfAPG7wcA23BKzyrCrkOBGkCKS-lMOQAAAgESAAAA23BKzyrCrkOBGkCKS-lMOQAD-1-25QAAAA=="
+                    TaskListId="AQMkADAwATM3ZmYAZS1iYTljLTc4NDgtMDACLTAwCgAuAAAD381MccKA0UeLdgJgfAPG7wEA23BKzyrCrkOBGkCKS-lMOQAAAgESAAAA" />
+                <wgt:TaskList
+                    Margin="20"
+                    BorderBrush="Black"
+                    BorderThickness="1" />
             </StackPanel>
         </PivotItem>
         <PivotItem Header="PeoplePicker">

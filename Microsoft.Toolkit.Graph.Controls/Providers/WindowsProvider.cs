@@ -239,6 +239,11 @@ namespace Microsoft.Toolkit.Graph.Providers
             {
                 Debug.WriteLine(result.ResponseError.ErrorMessage);
                 State = ProviderState.SignedOut;
+
+
+                // Refresh token here
+
+
                 return;
             }
 

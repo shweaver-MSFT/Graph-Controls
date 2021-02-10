@@ -1,0 +1,525 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using Microsoft.Graph;
+using Microsoft.Toolkit.Graph.Controls.Data;
+using Microsoft.Toolkit.Graph.Controls.Extensions;
+using Microsoft.Toolkit.Graph.Providers;
+using Microsoft.Toolkit.Uwp.UI.Extensions;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
+
+namespace Microsoft.Toolkit.Graph.Controls
+{
+    /// <summary>
+    /// foo
+    /// </summary>
+    [TemplatePart(Name = AddTaskButtonPart, Type = typeof(ButtonBase))]
+    [TemplatePart(Name = OverflowMenuButtonPart, Type = typeof(ButtonBase))]
+    [TemplatePart(Name = AvailableTasksListViewPart, Type = typeof(ListView))]
+    [TemplatePart(Name = CompletedTasksListViewPart, Type = typeof(ListView))]
+    public partial class TaskList : BaseGraphControl
+    {
+        private const string AddTaskButtonPart = "PART_AddTaskButton";
+        private const string OverflowMenuButtonPart = "PART_OverflowMenuButton";
+        private const string AvailableTasksListViewPart = "PART_AvailableTasksListView";
+        private const string CompletedTasksListViewPart = "PART_CompletedTasksListView";
+
+        private Button _addTaskButton;
+        private Button _overflowMenuButton;
+        private ListView _availableTasksListView;
+        private ListView _completedTasksListView;
+
+        private bool _isLoading;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the component is loading.
+        /// </summary>
+        protected bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                UpdateVisualState();
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TaskList"/> class.
+        /// </summary>
+        public TaskList()
+        {
+            DefaultStyleKey = typeof(TaskList);
+            _isLoading = false;
+            ProviderManager.Instance.ProviderUpdated += OnProviderUpdated;
+        }
+
+        private void OnProviderUpdated(object sender, ProviderUpdatedEventArgs e)
+        {
+            if (e.Reason == ProviderManagerChangedState.ProviderStateChanged)
+            {
+                UpdateVisualState();
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            TodoTaskDataSource.TaskUpdated += OnTaskUpdated;
+            TodoTaskDataSource.TaskDeleted += OnTaskDeleted;
+            TodoTaskDataSource.TaskAdded += OnTaskAdded;
+
+            if (_addTaskButton != null)
+            {
+                _addTaskButton.Click -= AddTaskButton_Click;
+            }
+
+            _addTaskButton = GetTemplateChild(AddTaskButtonPart) as Button;
+
+            if (_addTaskButton != null)
+            {
+                _addTaskButton.Click += AddTaskButton_Click;
+            }
+
+            if (_overflowMenuButton != null)
+            {
+                _overflowMenuButton.Click -= OverflowMenuButton_Click;
+            }
+
+            _overflowMenuButton = GetTemplateChild(OverflowMenuButtonPart) as Button;
+
+            if (_overflowMenuButton != null)
+            {
+                _overflowMenuButton.Click += OverflowMenuButton_Click;
+            }
+
+            if (_availableTasksListView != null)
+            {
+                _availableTasksListView.ItemClick -= AvailableTasksListView_ItemClick;
+                _availableTasksListView.ContextRequested -= AvailableTasksListView_ContextRequested;
+            }
+
+            _availableTasksListView = GetTemplateChild(AvailableTasksListViewPart) as ListView;
+
+            if (_availableTasksListView != null)
+            {
+                _availableTasksListView.ItemClick += AvailableTasksListView_ItemClick;
+                _availableTasksListView.ContextRequested += AvailableTasksListView_ContextRequested;
+            }
+
+            if (_completedTasksListView != null)
+            {
+                _completedTasksListView.ContextRequested -= CompletedTasksListView_ContextRequested;
+            }
+
+            _completedTasksListView = GetTemplateChild(CompletedTasksListViewPart) as ListView;
+
+            if (_completedTasksListView != null)
+            {
+                _completedTasksListView.ContextRequested += CompletedTasksListView_ContextRequested;
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override async Task LoadDataAsync()
+        {
+            if (IsLoading)
+            {
+                return;
+            }
+
+            IsLoading = true;
+
+            TaskLists = await TodoTaskDataSource.GetMyTaskListsAsync();
+
+            // Apply the Graph data
+            if (TaskLists != null && TaskLists.Count() > 0)
+            {
+                if (TaskListId != null)
+                {
+                    // Check for a specified default list, and set that if possible.
+                    var defaultTaskList = TaskLists.Where((l) => l.Id == TaskListId).FirstOrDefault();
+                    if (defaultTaskList != default)
+                    {
+                        var defaultIndex = TaskLists.IndexOf(defaultTaskList);
+                        SelectedTaskListIndex = defaultIndex;
+                    }
+                }
+
+                SelectedTaskList = TaskLists[SelectedTaskListIndex];
+                TaskListId = SelectedTaskList.Id;
+            }
+
+            IsLoading = false;
+            UpdateVisualState();
+        }
+
+        /// <inheritdoc/>
+        protected override async Task ClearDataAsync()
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                TaskLists = new ObservableCollection<TodoTaskList>();
+                CompletedTasks = new ObservableCollection<TaskDataModel>();
+                AvailableTasks = new ObservableCollection<TaskDataModel>();
+                SelectedTaskList = null;
+                SelectedTaskListIndex = 0;
+            });
+        }
+
+        private async void AddTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                if (AvailableTasks != null &&
+                    AvailableTasks.Count > 0 &&
+                    AvailableTasks.First() is TaskDataModel taskModel &&
+                    taskModel.Task.IsNew())
+                {
+                    // A new item is already ready for input.
+                    return;
+                }
+
+                AvailableTasks.Insert(0, new TaskDataModel(SelectedTaskList.Id, new TodoTask()));
+            });
+        }
+
+        private void OverflowMenuButton_Click(object sender, RoutedEventArgs e)
+        {
+            ShowOverflowContextMenu(sender as Button);
+        }
+
+        private void AvailableTasksListView_ItemClick(object sender, RoutedEventArgs e)
+        {
+            var task = (e.OriginalSource as FrameworkElement).DataContext;
+            System.Diagnostics.Debug.WriteLine("Item clicked");
+        }
+
+        private void AvailableTasksListView_ContextRequested(object sender, ContextRequestedEventArgs e)
+        {
+            var taskItem = GetChildTaskItem(e.OriginalSource);
+            if (taskItem != null)
+            {
+                System.Diagnostics.Debug.WriteLine("AvailableTasksListView_ContextRequested");
+            }
+        }
+
+        private void CompletedTasksListView_ContextRequested(object sender, ContextRequestedEventArgs e)
+        {
+            var taskItem = GetChildTaskItem(e.OriginalSource);
+            if (taskItem != null)
+            {
+                System.Diagnostics.Debug.WriteLine("CompletedTasksListView_ContextRequested");
+            }
+        }
+
+        private async void OnTaskUpdated(object sender, TodoTask task)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                var taskListId = (string)sender;
+
+                for (var i = 0; i < AvailableTasks.Count; i++)
+                {
+                    var taskModel = AvailableTasks[i];
+                    if (taskModel.Task.Id == task.Id)
+                    {
+                        AvailableTasks.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                for (var i = 0; i < CompletedTasks.Count; i++)
+                {
+                    var taskModel = CompletedTasks[i];
+                    if (taskModel.Task.Id == task.Id)
+                    {
+                        CompletedTasks.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                if (task.IsCompleted())
+                {
+                    CompletedTasks.Add(new TaskDataModel(taskListId, task));
+                }
+                else
+                {
+                    AvailableTasks.Add(new TaskDataModel(taskListId, task));
+                }
+            });
+        }
+
+        private async void OnTaskDeleted(object sender, string taskId)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                // Find the task by id and remove it.
+                foreach (var taskModel in AvailableTasks)
+                {
+                    if (taskModel.Task.Id == taskId)
+                    {
+                        AvailableTasks.Remove(taskModel);
+                        return;
+                    }
+                }
+
+                foreach (var taskModel in CompletedTasks)
+                {
+                    if (taskModel.Task.Id == taskId)
+                    {
+                        CompletedTasks.Remove(taskModel);
+                        break;
+                    }
+                }
+            });
+        }
+
+        private async void OnTaskAdded(object sender, TodoTask task)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                var taskListId = (string)sender;
+                var newTaskModel = new TaskDataModel(taskListId, task);
+                if (task.IsCompleted())
+                {
+                    for (var i = 0; i < CompletedTasks.Count; i++)
+                    {
+                        if (CompletedTasks[i].Task.IsNew())
+                        {
+                            CompletedTasks.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    CompletedTasks.Insert(0, newTaskModel);
+                }
+                else
+                {
+                    for (var i = 0; i < AvailableTasks.Count; i++)
+                    {
+                        if (AvailableTasks[i].Task.IsNew())
+                        {
+                            AvailableTasks.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    AvailableTasks.Insert(0, newTaskModel);
+                }
+            });
+        }
+
+        private async void LoadTasks()
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                IsLoading = true;
+
+                CompletedTasks = new ObservableCollection<TaskDataModel>();
+                AvailableTasks = new ObservableCollection<TaskDataModel>();
+
+                int taskListIndex = SelectedTaskListIndex;
+                if (taskListIndex == -1 || TaskLists.Count == 0 || taskListIndex > TaskLists.Count)
+                {
+                    IsLoading = false;
+                    return;
+                }
+
+                SelectedTaskList = TaskLists[taskListIndex];
+
+                try
+                {
+                    var taskListId = SelectedTaskList.Id;
+                    var tasks = await TodoTaskDataSource.GetTasksAsync(taskListId);
+
+                    foreach (var task in tasks)
+                    {
+                        var taskModel = new TaskDataModel(taskListId, task);
+
+                        if (task.IsCompleted())
+                        {
+                            CompletedTasks.Add(taskModel);
+                        }
+                        else
+                        {
+                            AvailableTasks.Add(taskModel);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    // TODO: Handle error to retrieve Tasks
+                    System.Diagnostics.Debug.WriteLine("Failed to load tasks: " + e.Message);
+                    GoToErrorState();
+                    return;
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            });
+        }
+
+        private void ShowTaskItemContextMenu(TaskItem taskItem)
+        {
+            //var task = taskItem.TaskDetails;
+
+            //if (!taskItem.IsEditModeEnabled && !taskItem.IsCompleted)
+            //{
+            //    var contextMenu = new MenuFlyout();
+            //    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Select for focus session", Command = new DelegateCommand<TaskItem>(SelectTaskForFocusSession), CommandParameter = taskItem });
+            //    contextMenu.ShowAt(taskItem);
+            //}
+        }
+
+        //private void SelectTaskForFocusSession(TaskItem taskItem)
+        //{
+        //    System.Diagnostics.Debug.WriteLine("Select task for focus session");
+
+        //    var taskData = taskItem.DataContext as TaskItemData;
+        //    if (taskData.IsNew)
+        //    {
+        //        var itemIndex = _availableTasksListView.IndexFromContainer(taskItem);
+        //        _availableTasksListView.SelectRange(new ItemIndexRange(itemIndex, 1));
+        //    }
+        //}
+
+
+        #region OverflowContextMenu
+        private void ShowOverflowContextMenu(FrameworkElement target)
+        {
+            var contextMenu = new MenuFlyout();
+            if (IsContentCollapsed)
+            {
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Show Microsoft To Do", Command = new DelegateCommand(ShowContent) });
+            }
+            else
+            {
+                contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Hide Microsoft To Do", Command = new DelegateCommand(CollapseContent) });
+            }
+
+            switch (ProviderManager.Instance.GlobalProvider.State)
+            {
+                case ProviderState.SignedOut:
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "View Settings", Command = new DelegateCommand(LaunchToDoAppSettings) });
+                    break;
+                case ProviderState.SignedIn:
+                    contextMenu.Items.Add(new MenuFlyoutItem() { Text = "Launch Microsoft To Do", Command = new DelegateCommand(LaunchToDoApp) });
+                    break;
+            }
+
+            contextMenu.ShowAt(target);
+        }
+
+        private void LaunchToDoApp()
+        {
+            // TODO: Launch the ToDo app.
+            System.Diagnostics.Debug.WriteLine("Launch To Do app");
+        }
+
+        private void LaunchToDoAppSettings()
+        {
+            System.Diagnostics.Debug.WriteLine("Launch To Do app settings");
+        }
+
+        private void ShowContent()
+        {
+            IsContentCollapsed = false;
+        }
+
+        private void CollapseContent()
+        {
+            IsContentCollapsed = true;
+        }
+        #endregion
+
+        /// <summary>
+        /// Helper function for finding the TaskItem element in the VisualTree.
+        /// May return null if the element cannot be found.
+        /// </summary>
+        private TaskItem GetChildTaskItem(object originalSource)
+        {
+            var sourceElement = originalSource as FrameworkElement;
+            if (sourceElement is TaskItem taskItem)
+            {
+                return taskItem;
+            }
+
+            if (sourceElement is ListViewItemPresenter)
+            {
+                var itemPresenter = sourceElement as ListViewItemPresenter;
+                return itemPresenter.FindDescendant<TaskItem>();
+            }
+
+            DependencyObject temp = sourceElement;
+            while (temp.GetType() != typeof(TaskItem))
+            {
+                temp = VisualTreeHelper.GetParent(temp);
+                if (temp == null)
+                {
+                    return null;
+                }
+            }
+
+            return temp as TaskItem;
+        }
+
+        private class DelegateCommand<T> : ICommand
+        {
+            private Action<T> _executeAction;
+
+            public event EventHandler CanExecuteChanged = null;
+
+            public DelegateCommand(Action<T> executeAction)
+            {
+                _executeAction = executeAction;
+            }
+
+            public bool CanExecute(object parameter)
+            {
+                return true;
+            }
+
+            public void Execute(object parameter)
+            {
+                _executeAction((T)parameter);
+            }
+        }
+
+        private class DelegateCommand : ICommand
+        {
+            private Action _executeAction;
+
+            public event EventHandler CanExecuteChanged = null;
+
+            public DelegateCommand(Action executeAction)
+            {
+                _executeAction = executeAction;
+            }
+
+            public bool CanExecute(object parameter = null)
+            {
+                return true;
+            }
+
+            public void Execute(object parameter = null)
+            {
+                _executeAction();
+            }
+        }
+    }
+}
